@@ -1,0 +1,759 @@
+{
+  "nodes": [
+    {
+      "node_id": "node_webhook_trigger",
+      "type": "trigger_webhook",
+      "name": "Trigger: Business Outreach",
+      "description": "Manual webhook trigger for drafting outreach from stored research.",
+      "parameters": {
+        "events": [
+          "trigger"
+        ],
+        "webhook_id": "business_outreach_hook"
+      },
+      "position": {
+        "x": 0,
+        "y": 360
+      },
+      "is_disabled": false
+    },
+    {
+      "node_id": "node_validate_input",
+      "type": "script",
+      "name": "Validate Outreach Input",
+      "description": "Accepts lead_id and/or research_id and prepares SQL-safe lookup values.",
+      "parameters": {
+        "script": "module.exports = async function({ input }) {\n  const source = (input && input.body && typeof input.body === 'object') ? input.body : (input || {});\n  const raw = (name) => source[name] ?? source[name.toLowerCase()] ?? source[name.toUpperCase()] ?? '';\n  const clean = (v) => String(v == null ? '' : v).trim();\n  const sql = (v) => clean(v).replace(/'/g, \"''\");\n  const leadId = clean(raw('lead_id') || raw('id') || raw('research_id') || raw('lead_research_id'));\n  if (!leadId) throw new Error('Business outreach requires a lead_id.');\n  return { lead_id: leadId, lead_id_sql: sql(leadId) };\n};",
+        "language": "javascript"
+      },
+      "position": {
+        "x": 240,
+        "y": 360
+      },
+      "is_disabled": false
+    },
+    {
+      "node_id": "node_fetch_context",
+      "type": "database",
+      "name": "Fetch Lead And Research",
+      "description": "Fetches the stored research plus lead contact information.",
+      "parameters": {
+        "query": "SELECT\n  l.id::text AS research_id,\n  l.id::text AS lead_id,\n  l.company_name,\n  l.website_url,\n  l.city,\n  l.lead_type AS business_type,\n  l.services_summary AS services,\n  '' AS target_customers,\n  '' AS website_quality,\n  '[]'::text AS missing_systems,\n  l.problems_summary AS pain_points,\n  l.outreach_message AS recommended_offer,\n  '' AS outreach_angle,\n  l.lead_score AS confidence_score,\n  '[]'::text AS source_urls,\n  COALESCE(l.email, '')::text AS recipient_email,\n  COALESCE(l.phone, '')::text AS phone,\n  COALESCE(l.notes, '')::text AS lead_notes\nFROM leads l\nWHERE l.id::text = '{{node_validate_input.lead_id_sql}}'\nLIMIT 1",
+        "read_only": true,
+        "parameters": []
+      },
+      "position": {
+        "x": 760,
+        "y": 360
+      },
+      "is_disabled": false
+    },
+    {
+      "node_id": "node_setup_outreach_schema",
+      "type": "database",
+      "name": "Setup Outreach Schema",
+      "description": "Creates lead_outreach table for drafts, approvals, and sent status.",
+      "parameters": {
+        "query": "CREATE TABLE IF NOT EXISTS lead_outreach (\n  id BIGSERIAL PRIMARY KEY,\n  lead_id TEXT,\n  research_id TEXT,\n  company_name TEXT,\n  website_url TEXT,\n  recipient_email TEXT,\n  subject TEXT,\n  body TEXT,\n  preview_text TEXT,\n  offer TEXT,\n  pain_point TEXT,\n  call_to_action TEXT,\n  tone TEXT,\n  followup_days INTEGER,\n  confidence_score INTEGER,\n  draft_json JSONB DEFAULT '{}'::jsonb,\n  status TEXT NOT NULL DEFAULT 'draft',\n  approval_comment TEXT,\n  approved_at TIMESTAMPTZ,\n  rejected_at TIMESTAMPTZ,\n  sent_at TIMESTAMPTZ,\n  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),\n  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()\n);\nCREATE INDEX IF NOT EXISTS idx_lead_outreach_lead_id ON lead_outreach (lead_id);\nCREATE INDEX IF NOT EXISTS idx_lead_outreach_research_id ON lead_outreach (research_id);\nCREATE INDEX IF NOT EXISTS idx_lead_outreach_status ON lead_outreach (status);\nCREATE INDEX IF NOT EXISTS idx_lead_outreach_created_at ON lead_outreach (created_at);",
+        "parameters": []
+      },
+      "position": {
+        "x": 500,
+        "y": 360
+      },
+      "is_disabled": false
+    },
+    {
+      "node_id": "node_prepare_context",
+      "type": "script",
+      "name": "Prepare Outreach Context",
+      "description": "Normalizes research and lead details for the drafting agent.",
+      "parameters": {
+        "script": "module.exports = async function({ input }) {\n  const row = (input && Array.isArray(input.rows) && input.rows[0]) ? input.rows[0] : {};\n  const clean = (v) => String(v == null ? '' : v).trim();\n  const parseList = (raw) => { try { const v = JSON.parse(raw || '[]'); return Array.isArray(v) ? v : []; } catch (e) { return []; } };\n  if (!clean(row.lead_id)) throw new Error('No lead found for outreach. Please provide a valid lead_id.');\n  return {\n    research_id: clean(row.research_id),\n    lead_id: clean(row.lead_id),\n    company_name: clean(row.company_name) || 'Unknown',\n    website_url: clean(row.website_url) || 'N/A',\n    city: clean(row.city) || 'unknown',\n    business_type: clean(row.business_type) || 'local business',\n    services: clean(row.services) || 'unknown',\n    target_customers: clean(row.target_customers) || 'unknown',\n    website_quality: clean(row.website_quality) || 'unknown',\n    missing_systems: parseList(row.missing_systems).join(', ') || 'unknown',\n    pain_points: clean(row.pain_points) || 'unknown',\n    recommended_offer: clean(row.recommended_offer) || 'modern website and automation support',\n    outreach_angle: clean(row.outreach_angle) || 'specific digital improvement opportunity',\n    confidence_score: Number.parseInt(row.confidence_score, 10) || 0,\n    source_urls: parseList(row.source_urls).join(', '),\n    recipient_email: clean(row.recipient_email).replace(/^N\\/A$/i, ''),\n    phone: clean(row.phone),\n    lead_notes: clean(row.lead_notes)\n  };\n};",
+        "language": "javascript"
+      },
+      "position": {
+        "x": 1020,
+        "y": 360
+      },
+      "is_disabled": false
+    },
+    {
+      "node_id": "node_lm_draft",
+      "type": "lm_gemini",
+      "name": "Gemini 2.5 Pro",
+      "description": "Language model for outreach drafting.",
+      "parameters": {
+        "model": "gemini-2.5-pro"
+      },
+      "position": {
+        "x": 1260,
+        "y": 180
+      },
+      "is_disabled": false
+    },
+    {
+      "node_id": "node_outreach_agent",
+      "type": "ai_agent",
+      "name": "Outreach Draft Agent",
+      "description": "Creates a personalized outreach email draft from the stored research.",
+      "parameters": {
+        "prompt": "You are Dee Empire's B2B outreach copywriter. Create a respectful, personalized cold outreach email using the research below.\n\nSENDER / SIGNATURE:\n- Sender name: Mohamed Sesay\n- Position: Founder & Automation Consultant\n- Company: Dee Empire\n- Address: Forststraße 6, 96264 Altenkunstadt, Germany\n- Email: msesay@dee-empire.com\n- WhatsApp: +49 152 15461719\n- Website: dee-empire.com\n\nBUSINESS:\n- company_name: {{node_prepare_context.company_name}}\n- city: {{node_prepare_context.city}}\n- business_type: {{node_prepare_context.business_type}}\n- website_url: {{node_prepare_context.website_url}}\n- services: {{node_prepare_context.services}}\n- target_customers: {{node_prepare_context.target_customers}}\n- website_quality: {{node_prepare_context.website_quality}}\n- missing_systems: {{node_prepare_context.missing_systems}}\n- pain_points: {{node_prepare_context.pain_points}}\n- recommended_offer: {{node_prepare_context.recommended_offer}}\n- outreach_angle: {{node_prepare_context.outreach_angle}}\n- existing_notes: {{node_prepare_context.lead_notes}}\n\nWrite in German unless the research clearly suggests another language. Be specific, short, and human. Do not overpromise. Do not sound spammy.\n\nUse this plain human email structure:\n1. Friendly greeting to the business/team.\n2. One sentence showing you actually looked at their business or website.\n3. One simple problem/opportunity from the research.\n4. One clear Dee Empire offer tied to that opportunity.\n5. Soft CTA: ask if you may send a quick idea or if a short call would make sense.\n6. Plain signature exactly with Mohamed Sesay, Founder & Automation Consultant, Dee Empire, Forststraße 6, 96264 Altenkunstadt, msesay@dee-empire.com, WhatsApp: +49 152 15461719, dee-empire.com.\n\nReturn ONLY valid compact JSON:\n{\"recipient_email\":\"{{node_prepare_context.recipient_email}}\",\"subject\":\"\",\"preview_text\":\"\",\"body\":\"\",\"pain_point\":\"\",\"offer\":\"\",\"call_to_action\":\"\",\"tone\":\"professional_warm\",\"followup_days\":3,\"confidence_score\":0}\n\nRules:\n- body must be the exact message the lead will receive.\n- body must be plain text, no HTML, no logo, no fancy design, no placeholders.\n- body should be 120-190 words including the full signature.\n- include one specific observation from the research.\n- CTA should ask for a short call or permission to send a quick idea.\n- If recipient_email is empty, keep it empty.",
+        "max_iterations": 3
+      },
+      "position": {
+        "x": 1500,
+        "y": 360
+      },
+      "is_disabled": false
+    },
+    {
+      "node_id": "node_parse_draft",
+      "type": "script",
+      "name": "Parse Outreach Draft",
+      "description": "Parses the draft agent JSON and falls back safely if output is imperfect.",
+      "parameters": {
+        "script": "module.exports = async function({ input }) {\n  let raw = input && (input.output || input.text || input.result || input.content);\n  if (raw && typeof raw === 'object' && !Array.isArray(raw)) raw = JSON.stringify(raw);\n  raw = String(raw || '{}').replace(/```json/gi, '').replace(/```/g, '').trim();\n  const start = raw.indexOf('{');\n  const end = raw.lastIndexOf('}');\n  if (start >= 0 && end > start) raw = raw.slice(start, end + 1);\n  let parsed = {};\n  try { parsed = JSON.parse(raw); } catch (e) { parsed = {}; }\n  const esc = (v) => String(v == null ? '' : v).trim().replace(/'/g, \"''\");\n  const clamp = (v) => Math.max(0, Math.min(100, Number.parseInt(v, 10) || 0));\n  const signature = 'Viele Grüße\\nMohamed Sesay\\nFounder & Automation Consultant\\nDee Empire\\nForststraße 6, 96264 Altenkunstadt\\nmsesay@dee-empire.com\\nWhatsApp: +49 152 15461719\\ndee-empire.com';\n  const subject = parsed.subject || 'Kurze Idee für Ihre Online-Präsenz';\n  let body = parsed.body || 'Hallo, ich habe mir Ihre Online-Präsenz angesehen und glaube, dass Dee Empire Ihnen mit einer moderneren Website und klarerem Kontakt- oder Buchungsfluss helfen kann. Wenn es passt, sende ich Ihnen gern eine kurze konkrete Idee dazu.';\n  body = String(body || '').trim();\n  if (!/Mohamed\\s+Sesay/i.test(body)) body = body + '\\n\\n' + signature;\n  return {\n    recipient_email: esc(parsed.recipient_email || ''),\n    subject: esc(subject),\n    preview_text: esc(parsed.preview_text || subject),\n    body: esc(body),\n    pain_point: esc(parsed.pain_point || 'digital presence improvement'),\n    offer: esc(parsed.offer || 'modern website and automation support'),\n    call_to_action: esc(parsed.call_to_action || 'permission to send a short idea'),\n    tone: esc(parsed.tone || 'professional_warm'),\n    followup_days: Math.max(1, Math.min(30, Number.parseInt(parsed.followup_days, 10) || 3)),\n    confidence_score: clamp(parsed.confidence_score || 50),\n    draft_json: esc(JSON.stringify(parsed && typeof parsed === 'object' ? parsed : {}))\n  };\n};",
+        "language": "javascript"
+      },
+      "position": {
+        "x": 1760,
+        "y": 360
+      },
+      "is_disabled": false
+    },
+    {
+      "node_id": "node_store_outreach",
+      "type": "database",
+      "name": "Store Outreach Draft",
+      "description": "Stores the draft before any human approval or sending.",
+      "parameters": {
+        "query": "INSERT INTO lead_outreach (lead_id, research_id, company_name, website_url, recipient_email, subject, body, preview_text, offer, pain_point, call_to_action, tone, followup_days, confidence_score, draft_json, status, created_at, updated_at) VALUES ('{{node_prepare_context.lead_id}}', '{{node_prepare_context.research_id}}', '{{node_prepare_context.company_name}}', NULLIF(NULLIF('{{node_prepare_context.website_url}}','N/A'),''), NULLIF('{{node_prepare_context.recipient_email}}',''), '{{node_parse_draft.subject}}', '{{node_parse_draft.body}}', '{{node_parse_draft.preview_text}}', '{{node_parse_draft.offer}}', '{{node_parse_draft.pain_point}}', '{{node_parse_draft.call_to_action}}', '{{node_parse_draft.tone}}', {{node_parse_draft.followup_days}}, {{node_parse_draft.confidence_score}}, '{{node_parse_draft.draft_json}}'::jsonb, 'pending_approval', NOW(), NOW()) RETURNING id, lead_id, research_id, company_name, recipient_email, subject, body, preview_text, offer, pain_point, call_to_action, followup_days, confidence_score, status",
+        "parameters": []
+      },
+      "position": {
+        "x": 2020,
+        "y": 360
+      },
+      "is_disabled": false
+    },
+    {
+      "node_id": "node_build_draft_record",
+      "type": "script",
+      "name": "Build Draft Record",
+      "description": "Extracts the inserted outreach draft row for downstream email and approval nodes.",
+      "parameters": {
+        "script": "module.exports = async function({ input }) {\n  const row = (input && Array.isArray(input.rows) && input.rows[0]) ? input.rows[0] : {};\n  const clean = (v) => String(v == null ? '' : v).trim();\n  return {\n    outreach_id: clean(row.id),\n    lead_id: clean(row.lead_id),\n    research_id: clean(row.research_id),\n    company_name: clean(row.company_name),\n    recipient_email: clean(row.recipient_email),\n    subject: clean(row.subject),\n    body: clean(row.body),\n    preview_text: clean(row.preview_text),\n    offer: clean(row.offer),\n    pain_point: clean(row.pain_point),\n    call_to_action: clean(row.call_to_action),\n    followup_days: Number.parseInt(row.followup_days, 10) || 3,\n    confidence_score: Number.parseInt(row.confidence_score, 10) || 0,\n    has_recipient: clean(row.recipient_email) ? 'yes' : ''\n  };\n};",
+        "language": "javascript"
+      },
+      "position": {
+        "x": 2280,
+        "y": 360
+      },
+      "is_disabled": false
+    },
+    {
+      "node_id": "node_build_approval_email",
+      "type": "script",
+      "name": "Build Exact Send Preview Email",
+      "description": "Builds an internal approval email showing the exact message the lead will receive.",
+      "parameters": {
+        "script": "module.exports = async function({ input }) {\n  const esc = (s) => String(s == null ? '' : s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');\n  const recipient = input.recipient_email || 'NO RECIPIENT EMAIL FOUND';\n  const subject = input.subject || '';\n  const body = input.body || '';\n  const html = '<div style=\"font-family:Arial,Helvetica,sans-serif;background:#f7f5f0;padding:24px;\">'\n    + '<table width=\"100%\" style=\"max-width:860px;margin:0 auto;background:#fff;border:1px solid #e8e1d0;border-radius:8px;overflow:hidden;\">'\n    + '<tr><td style=\"background:#0a0a0a;padding:22px 28px;\"><span style=\"color:#d4af37;font-size:20px;font-weight:bold;\">DEE EMPIRE</span><span style=\"color:#fff;font-size:12px;float:right;margin-top:6px;\">EXACT OUTREACH SEND PREVIEW</span></td></tr>'\n    + '<tr><td style=\"padding:24px 28px;\">'\n    + '<h2 style=\"margin:0 0 6px;color:#0a0a0a;\">Approve the exact customer email</h2>'\n    + '<p style=\"color:#555;font-size:13px;margin:0 0 16px;\">This is the exact email that will be sent to the lead if you approve in the workflow execution approval panel.</p>'\n    + '<table width=\"100%\" style=\"border-collapse:collapse;font-size:13px;margin-bottom:18px;\">'\n    + '<tr><td style=\"padding:8px;border-top:1px solid #eee;color:#777;width:160px;\">Outreach ID</td><td style=\"padding:8px;border-top:1px solid #eee;\">'+esc(input.outreach_id)+'</td></tr>'\n    + '<tr><td style=\"padding:8px;border-top:1px solid #eee;color:#777;\">Company</td><td style=\"padding:8px;border-top:1px solid #eee;\">'+esc(input.company_name)+'</td></tr>'\n    + '<tr><td style=\"padding:8px;border-top:1px solid #eee;color:#777;\">Lead recipient</td><td style=\"padding:8px;border-top:1px solid #eee;font-weight:bold;\">'+esc(recipient)+'</td></tr>'\n    + '<tr><td style=\"padding:8px;border-top:1px solid #eee;color:#777;\">Follow-up delay</td><td style=\"padding:8px;border-top:1px solid #eee;\">'+esc(input.followup_days)+' days</td></tr>'\n    + '</table>'\n    + '<div style=\"border:1px solid #d8d1c2;border-radius:8px;overflow:hidden;margin-top:8px;\">'\n    + '<div style=\"background:#fbf7ec;padding:10px 14px;color:#9c7a1f;font-weight:bold;font-size:12px;letter-spacing:.04em;\">EXACT MESSAGE TO CUSTOMER</div>'\n    + '<div style=\"padding:14px 16px;border-bottom:1px solid #eee;font-size:13px;\"><strong>To:</strong> '+esc(recipient)+'</div>'\n    + '<div style=\"padding:14px 16px;border-bottom:1px solid #eee;font-size:13px;\"><strong>Subject:</strong> '+esc(subject)+'</div>'\n    + '<div style=\"padding:16px;white-space:pre-wrap;line-height:1.55;font-size:14px;color:#111;\">'+esc(body)+'</div>'\n    + '</div>'\n    + '<p style=\"margin:16px 0 0;color:#555;font-size:13px;\"><strong>Approval rule:</strong> Approve only if the To, Subject, and Body above are ready to send exactly as shown. Reject if anything needs revision.</p>'\n    + '</td></tr>'\n    + '<tr><td style=\"background:#0a0a0a;padding:16px 28px;text-align:center;color:#cfcfcf;font-size:11px;\">Dee Empire outreach approval - exact customer preview</td></tr>'\n    + '</table></div>';\n  return { subject: 'Approve exact outreach email: ' + (input.company_name || 'Unknown'), html };\n};",
+        "language": "javascript"
+      },
+      "position": {
+        "x": 2540,
+        "y": 360
+      },
+      "is_disabled": false
+    },
+    {
+      "node_id": "node_human_approval",
+      "type": "human_approval",
+      "name": "Human Approval: Send Outreach?",
+      "description": "Review the outreach draft. Approve to send to the lead if a recipient email exists. Reject to stop and store rejected status.",
+      "parameters": {
+        "title": "Approve exact customer email before sending",
+        "approvers": [
+          "msesay@dee-empire.com"
+        ],
+        "description": "Review the exact To, Subject, and Body sent to msesay@dee-empire.com. Company: {{node_build_draft_record.company_name}}. Recipient: {{node_build_draft_record.recipient_email}}. Subject: {{node_build_draft_record.subject}}. Exact body: {{node_build_draft_record.body}}. Approve only if this exact message is ready to send to the lead. Reject if anything needs revision.",
+        "timeout_seconds": 86400
+      },
+      "position": {
+        "x": 3060,
+        "y": 360
+      },
+      "is_disabled": false
+    },
+    {
+      "node_id": "node_email_approval_request",
+      "type": "email",
+      "name": "Email Exact Send Preview To Owner",
+      "description": "Sends the exact customer-facing outreach message to Dee Empire before approval.",
+      "parameters": {
+        "to": "msesay@dee-empire.com",
+        "body": "{{node_build_approval_email.html}}",
+        "is_html": true,
+        "subject": "{{node_build_approval_email.subject}}",
+        "to_email": "msesay@dee-empire.com"
+      },
+      "position": {
+        "x": 2800,
+        "y": 360
+      },
+      "is_disabled": false
+    },
+    {
+      "node_id": "node_mark_approved",
+      "type": "database",
+      "name": "Mark Draft Approved",
+      "description": "Records approval decision before sending.",
+      "parameters": {
+        "query": "UPDATE lead_outreach SET status = 'approved', approval_comment = NULLIF('{{node_human_approval.approval_note}}',''), approved_at = NOW(), updated_at = NOW() WHERE id::text = '{{node_build_draft_record.outreach_id}}' RETURNING id, recipient_email, subject, body",
+        "parameters": []
+      },
+      "position": {
+        "x": 3320,
+        "y": 220
+      },
+      "is_disabled": false
+    },
+    {
+      "node_id": "node_has_recipient",
+      "type": "conditional",
+      "name": "Has Recipient Email?",
+      "description": "Routes approved drafts with a recipient to send; otherwise notifies Dee Empire.",
+      "parameters": {
+        "condition": [
+          {
+            "field": "{{node_build_draft_record.has_recipient}}",
+            "value": "",
+            "operator": "is_not_empty"
+          }
+        ]
+      },
+      "position": {
+        "x": 3580,
+        "y": 220
+      },
+      "is_disabled": false
+    },
+    {
+      "node_id": "node_send_customer_email",
+      "type": "email",
+      "name": "Send Approved Outreach",
+      "description": "Sends the approved outreach email to the lead.",
+      "parameters": {
+        "to": "{{node_build_draft_record.recipient_email}}",
+        "body": "{{node_build_draft_record.body}}",
+        "is_html": false,
+        "subject": "{{node_build_draft_record.subject}}",
+        "to_email": "{{node_build_draft_record.recipient_email}}"
+      },
+      "position": {
+        "x": 3840,
+        "y": 120
+      },
+      "is_disabled": false
+    },
+    {
+      "node_id": "node_mark_sent",
+      "type": "database",
+      "name": "Mark Outreach Sent",
+      "description": "Marks the approved outreach as sent and moves lead to contacted.",
+      "parameters": {
+        "query": "UPDATE lead_outreach SET status = 'sent', sent_at = NOW(), updated_at = NOW() WHERE id::text = '{{node_build_draft_record.outreach_id}}';\nUPDATE leads SET pipeline_stage = 'contacted', contacted_at = COALESCE(contacted_at, NOW()), last_contact_at = NOW(), updated_at = NOW() WHERE id::text = '{{node_build_draft_record.lead_id}}';",
+        "parameters": []
+      },
+      "position": {
+        "x": 4100,
+        "y": 120
+      },
+      "is_disabled": false
+    },
+    {
+      "node_id": "node_notify_no_recipient",
+      "type": "email",
+      "name": "Notify No Recipient Email",
+      "description": "Notifies Dee Empire that approval happened but no customer email exists.",
+      "parameters": {
+        "to": "msesay@dee-empire.com",
+        "body": "The outreach draft was approved but no recipient email exists, so nothing was sent. Outreach ID: {{node_build_draft_record.outreach_id}}\nCompany: {{node_build_draft_record.company_name}}\nSubject: {{node_build_draft_record.subject}}",
+        "is_html": false,
+        "subject": "Approved outreach has no recipient: {{node_build_draft_record.company_name}}",
+        "to_email": "msesay@dee-empire.com"
+      },
+      "position": {
+        "x": 3840,
+        "y": 320
+      },
+      "is_disabled": false
+    },
+    {
+      "node_id": "node_mark_no_recipient",
+      "type": "database",
+      "name": "Mark Approved No Recipient",
+      "description": "Stores approved_no_recipient status.",
+      "parameters": {
+        "query": "UPDATE lead_outreach SET status = 'approved_no_recipient', approved_at = COALESCE(approved_at, NOW()), updated_at = NOW() WHERE id::text = '{{node_build_draft_record.outreach_id}}'",
+        "parameters": []
+      },
+      "position": {
+        "x": 4100,
+        "y": 320
+      },
+      "is_disabled": false
+    },
+    {
+      "node_id": "node_mark_rejected",
+      "type": "database",
+      "name": "Mark Draft Rejected",
+      "description": "Stores rejected status when human approval rejects the draft.",
+      "parameters": {
+        "query": "UPDATE lead_outreach SET status = 'rejected', approval_comment = NULLIF('{{node_human_approval.approval_note}}',''), rejected_at = NOW(), updated_at = NOW() WHERE id::text = '{{node_build_draft_record.outreach_id}}'",
+        "parameters": []
+      },
+      "position": {
+        "x": 3320,
+        "y": 560
+      },
+      "is_disabled": false
+    },
+    {
+      "node_id": "node_notify_rejected",
+      "type": "email",
+      "name": "Notify Draft Rejected",
+      "description": "Notifies Dee Empire that the draft was rejected.",
+      "parameters": {
+        "to": "msesay@dee-empire.com",
+        "body": "The outreach draft was rejected and was not sent. Outreach ID: {{node_build_draft_record.outreach_id}}\nCompany: {{node_build_draft_record.company_name}}\nSubject: {{node_build_draft_record.subject}}",
+        "is_html": false,
+        "subject": "Outreach draft rejected: {{node_build_draft_record.company_name}}",
+        "to_email": "msesay@dee-empire.com"
+      },
+      "position": {
+        "x": 3580,
+        "y": 560
+      },
+      "is_disabled": false
+    },
+    {
+      "node_id": "node_done_no_recipient",
+      "type": "set",
+      "name": "Done: Approved No Recipient",
+      "description": "Final output when approved but no recipient email exists.",
+      "parameters": {
+        "fields": [
+          {
+            "name": "status",
+            "value": "approved_no_recipient"
+          },
+          {
+            "name": "outreach_id",
+            "value": "{{node_build_draft_record.outreach_id}}"
+          },
+          {
+            "name": "lead_id",
+            "value": "{{node_build_draft_record.lead_id}}"
+          },
+          {
+            "name": "research_id",
+            "value": "{{node_build_draft_record.research_id}}"
+          }
+        ]
+      },
+      "position": {
+        "x": 4360,
+        "y": 320
+      },
+      "is_disabled": false
+    },
+    {
+      "node_id": "node_done_sent",
+      "type": "set",
+      "name": "Done: Outreach Sent",
+      "description": "Final output for approved and sent branch.",
+      "parameters": {
+        "fields": [
+          {
+            "name": "status",
+            "value": "sent"
+          },
+          {
+            "name": "outreach_id",
+            "value": "{{node_build_draft_record.outreach_id}}"
+          },
+          {
+            "name": "lead_id",
+            "value": "{{node_build_draft_record.lead_id}}"
+          },
+          {
+            "name": "research_id",
+            "value": "{{node_build_draft_record.research_id}}"
+          }
+        ]
+      },
+      "position": {
+        "x": 4360,
+        "y": 120
+      },
+      "is_disabled": false
+    },
+    {
+      "node_id": "node_done_rejected",
+      "type": "set",
+      "name": "Done: Rejected",
+      "description": "Final output for rejected branch.",
+      "parameters": {
+        "fields": [
+          {
+            "name": "status",
+            "value": "rejected"
+          },
+          {
+            "name": "outreach_id",
+            "value": "{{node_build_draft_record.outreach_id}}"
+          },
+          {
+            "name": "lead_id",
+            "value": "{{node_build_draft_record.lead_id}}"
+          },
+          {
+            "name": "research_id",
+            "value": "{{node_build_draft_record.research_id}}"
+          }
+        ]
+      },
+      "position": {
+        "x": 3840,
+        "y": 560
+      },
+      "is_disabled": false
+    },
+    {
+      "node_id": "note_overview",
+      "type": "note",
+      "name": "Workflow Overview Note",
+      "description": "",
+      "parameters": {
+        "noteText": "BUSINESS OUTREACH WORKFLOW - OPERATOR OVERVIEW\n\nPurpose: create a personalized outreach email from an existing lead_research record, store it in lead_outreach, send the draft to Dee Empire for review, pause for human approval, then either send to the lead or record why it did not send.\n\nThis workflow is manual-triggered for now. Use webhook payload with research_id when possible. lead_id is allowed, but research_id is safer because it points to one exact investigation record.\n\nSafe rule: no customer email should send before the human_approval node is approved. If the lead has no email, the workflow must not fail blindly; it goes to the no-recipient branch and notifies Dee Empire.\n\nMain database tables:\n- lead_research: source investigation data from the previous workflow.\n- lead_outreach: stores the generated draft, approval result, sent status, and follow-up metadata.\n- leads: updated to contacted only after an approved customer email is actually sent."
+      },
+      "position": {
+        "x": -20,
+        "y": -860
+      },
+      "is_disabled": false
+    },
+    {
+      "node_id": "note_approval",
+      "type": "note",
+      "name": "Phase 3 Note - Human Approval",
+      "description": "",
+      "parameters": {
+        "noteText": "PHASE 3 - OWNER REVIEW AND HUMAN APPROVAL\n\nNodes in this phase:\n1. Build Draft Record\n2. Build Exact Send Preview Email\n3. Email Exact Send Preview To Owner\n4. Human Approval: Send Outreach?\n\nWhat happens:\n- The inserted lead_outreach row is converted into clean fields: outreach_id, lead_id, research_id, company_name, recipient_email, subject, body, offer, followup_days.\n- An internal HTML approval email is sent to msesay@dee-empire.com showing the exact customer-facing To, Subject, and Body that will be sent if approved.\n- This owner email is not just a summary. It is the send preview: the same recipient, subject, and message body used by Send Approved Outreach.\n- The workflow pauses at human_approval until a reviewer approves or rejects in the execution approval panel.\n\nBackend contract:\n- Node type must be exactly human_approval.\n- Approved handle must be exactly approved.\n- Rejected handle must be exactly rejected.\n- Reviewer comment is exposed as approval_note and copied into lead_outreach.approval_comment.\n\nDebug when broken:\n- If no approval screen appears, check that node_human_approval type is human_approval.\n- If branches do not continue, check source_handle values: approved and rejected.\n- If approval comments do not save, check references use {{node_human_approval.approval_note}}.\n- If the approval email does not show the exact customer message, inspect node_build_draft_record output and Build Exact Send Preview Email."
+      },
+      "position": {
+        "x": 2540,
+        "y": -960
+      },
+      "is_disabled": false
+    },
+    {
+      "node_id": "note_phase1_fetch_context",
+      "type": "note",
+      "name": "Phase 1 Note - Trigger And Context",
+      "description": "",
+      "parameters": {
+        "noteText": "PHASE 1 - TRIGGER, VALIDATE, DATABASE SETUP, FETCH CONTEXT\n\nNodes in this phase:\n1. Trigger: Business Outreach\n2. Validate Outreach Input\n3. Setup Outreach Schema\n4. Fetch Lead And Research\n5. Prepare Outreach Context\n\nInput expected:\n- Best: {\"research_id\": \"...\"}\n- Also accepted: {\"lead_id\": \"...\"}\n- Both can be sent together.\n\nWhat happens:\n- Validate Outreach Input reads webhook body and accepts lead_id or research_id.\n- Setup Outreach Schema creates lead_outreach if missing. This makes the workflow importable into a new database without manual table creation.\n- Fetch Lead And Research reads one lead_research row and joins leads to get recipient_email, phone, and notes.\n- Prepare Outreach Context normalizes the row for the AI draft agent.\n\nWhat must be true:\n- business_investigation.workflow.json must have already created a lead_research row.\n- research_id should match lead_research.id.\n- If only lead_id is used, the newest research row for that lead is selected.\n\nDebug when broken:\n- Error \"Business outreach requires lead_id or research_id\": webhook payload is wrong.\n- Error \"No lead_research row found\": investigation did not run, wrong research_id, or wrong lead_id.\n- Empty recipient_email is allowed; the workflow will later route to approved_no_recipient instead of sending.\n- If missing_systems/source_urls are empty, inspect the original lead_research row."
+      },
+      "position": {
+        "x": -460,
+        "y": -540
+      },
+      "is_disabled": false
+    },
+    {
+      "node_id": "note_phase2_draft_store",
+      "type": "note",
+      "name": "Phase 2 Note - Draft And Store",
+      "description": "",
+      "parameters": {
+        "noteText": "PHASE 2 - AI DRAFT CREATION AND DATABASE STORAGE\n\nNodes in this phase:\n1. Gemini 2.5 Pro\n2. Outreach Draft Agent\n3. Parse Outreach Draft\n4. Store Outreach Draft\n\nWhat happens:\n- Outreach Draft Agent receives clean research context from Prepare Outreach Context.\n- The agent creates a respectful German outreach email unless the research suggests another language.\n- The customer email must be plain text and human: greeting, one specific observation, one problem/opportunity, one Dee Empire offer, soft CTA, then the full Mohamed Sesay business signature.\n- Sender details must be present in the final body: Mohamed Sesay, Founder & Automation Consultant, Dee Empire, Forststraße 6, 96264 Altenkunstadt, msesay@dee-empire.com, WhatsApp: +49 152 15461719, dee-empire.com.\n- Do not add logos, banners, HTML, or fancy styling to the customer message. The owner preview email may use light Dee Empire styling, but the lead receives plain text.\n- Parse Outreach Draft converts AI JSON into safe fields, creates fallback text if the model returns imperfect JSON, and appends the full Mohamed Sesay signature if the AI forgets it.\n- Store Outreach Draft inserts the draft into lead_outreach with status pending_approval.\n\nReusable format:\n- See folder/docs/workflows/business_outreach_letter_template.md for the standard letter structure.\n\nImportant backend template rule:\nScript node return fields are referenced directly. Use node_parse_draft.subject style references. Do not add an extra output layer between the script node id and the returned field.\n\nWhat is stored in lead_outreach:\n- lead_id, research_id, company_name, website_url\n- recipient_email\n- subject, body, preview_text\n- pain_point, offer, call_to_action\n- tone, followup_days, confidence_score\n- draft_json\n- status = pending_approval\n\nDebug when broken:\n- If database insert fails, inspect Store Outreach Draft query and Parse Outreach Draft output.\n- If draft is generic, inspect lead_research fields: website_quality, pain_points, recommended_offer, outreach_angle.\n- If subject/body are empty, inspect Outreach Draft Agent output and Parse Outreach Draft output.\n- If position or address is missing, inspect Parse Outreach Draft because it should append the full signature.\n- If SQL errors mention quotes, check that Parse Outreach Draft is escaping apostrophes."
+      },
+      "position": {
+        "x": 1300,
+        "y": -1020
+      },
+      "is_disabled": false
+    },
+    {
+      "node_id": "note_phase4_branches",
+      "type": "note",
+      "name": "Phase 4 Note - Approval Branches",
+      "description": "",
+      "parameters": {
+        "noteText": "PHASE 4 - APPROVED, NO-RECIPIENT, AND REJECTED BRANCHES\n\nApproved branch:\n1. Mark Draft Approved\n2. Has Recipient Email?\n3. If true: Send Approved Outreach\n4. Mark Outreach Sent\n5. Done: Outreach Sent\n\nApproved but no recipient branch:\n1. Has Recipient Email? routes false\n2. Notify No Recipient Email\n3. Mark Approved No Recipient\n4. Done: Approved No Recipient\n\nRejected branch:\n1. Mark Draft Rejected\n2. Notify Draft Rejected\n3. Done: Rejected\n\nWhat happens when approved with recipient:\n- lead_outreach.status becomes approved, then sent.\n- Customer email is sent to node_build_draft_record.recipient_email.\n- leads.pipeline_stage becomes contacted.\n- leads.contacted_at and leads.last_contact_at are updated.\n\nWhat happens when approved with no recipient:\n- No customer email is sent.\n- Dee Empire receives an internal notice.\n- lead_outreach.status becomes approved_no_recipient.\n\nWhat happens when rejected:\n- No customer email is sent.\n- lead_outreach.status becomes rejected.\n- Dee Empire receives an internal rejected notice.\n\nDebug when broken:\n- If approved email does not send, check Has Recipient Email? output and recipient_email.\n- If lead stage does not update, check lead_id and the leads.pipeline_stage constraint allows contacted.\n- If rejected branch does not run, check human_approval rejected handle.\n- If customer receives email without approval, the graph is wrong: Send Approved Outreach must only be reachable from human_approval approved branch."
+      },
+      "position": {
+        "x": 3520,
+        "y": -760
+      },
+      "is_disabled": false
+    },
+    {
+      "node_id": "note_database_contract",
+      "type": "note",
+      "name": "Database Contract Note",
+      "description": "",
+      "parameters": {
+        "noteText": "DATABASE CONTRACT - DO NOT GUESS\n\nSource table: lead_research\n- Created by business_investigation.workflow.json.\n- This workflow reads the saved investigation and does not redo research.\n\nDraft table: lead_outreach\n- Created by Setup Outreach Schema.\n- Stores every draft before approval.\n- Keeps status history for pending_approval, approved, sent, approved_no_recipient, rejected.\n\nCRM table: leads\n- Only updated to pipeline_stage = contacted after a customer email is actually sent.\n- Do not set contacted when approval is rejected or when no recipient email exists.\n\nReason lead_id/research_id are TEXT in lead_outreach:\n- Prevents integer/UUID mismatch errors across environments.\n- Queries compare ids using id::text.\n\nWhen maintaining this workflow:\n- Keep research data in lead_research.\n- Keep outreach draft/send data in lead_outreach.\n- Keep CRM pipeline state in leads.\n- Do not mix these responsibilities."
+      },
+      "position": {
+        "x": 500,
+        "y": -180
+      },
+      "is_disabled": false
+    },
+    {
+      "node_id": "note_testing_guide",
+      "type": "note",
+      "name": "Testing And Repair Note",
+      "description": "",
+      "parameters": {
+        "noteText": "TESTING AND REPAIR GUIDE\n\nSafe test order:\n1. Run business investigation first.\n2. Copy research_id from the investigation output or lead_research table.\n3. Trigger this workflow with {\"research_id\": \"...\"}.\n4. Confirm lead_outreach has a new row with status pending_approval.\n5. Confirm the internal approval email arrives and shows the exact customer-facing To, Subject, and Body.\n6. In the execution approval panel, reject first to test the rejected branch.\n7. Test approved_no_recipient with a lead that has no email.\n8. Only approve a real send when recipient_email is correct.\n\nCommon repairs:\n- Wrong payload: fix Validate Outreach Input expectations.\n- No research row: rerun business investigation.\n- Empty draft: inspect lead_research fields and Outreach Draft Agent output.\n- Approval not pausing: verify node type human_approval.\n- Branch not routing: verify approved/rejected handles.\n- Email send fails: check project email provider and recipient_email.\n\nNever bypass human_approval while testing. That node is the safety gate."
+      },
+      "position": {
+        "x": 2260,
+        "y": -180
+      },
+      "is_disabled": false
+    }
+  ],
+  "connections": [
+    {
+      "source_node_id": "node_webhook_trigger",
+      "target_node_id": "node_validate_input",
+      "source_handle": "output",
+      "target_handle": "input"
+    },
+    {
+      "source_node_id": "node_validate_input",
+      "target_node_id": "node_setup_outreach_schema",
+      "source_handle": "output",
+      "target_handle": "input"
+    },
+    {
+      "source_node_id": "node_setup_outreach_schema",
+      "target_node_id": "node_fetch_context",
+      "source_handle": "output",
+      "target_handle": "input"
+    },
+    {
+      "source_node_id": "node_fetch_context",
+      "target_node_id": "node_prepare_context",
+      "source_handle": "output",
+      "target_handle": "input"
+    },
+    {
+      "source_node_id": "node_lm_draft",
+      "target_node_id": "node_outreach_agent",
+      "source_handle": "ai_languageModel",
+      "target_handle": "ai_languageModel"
+    },
+    {
+      "source_node_id": "node_prepare_context",
+      "target_node_id": "node_outreach_agent",
+      "source_handle": "output",
+      "target_handle": "input"
+    },
+    {
+      "source_node_id": "node_outreach_agent",
+      "target_node_id": "node_parse_draft",
+      "source_handle": "output",
+      "target_handle": "input"
+    },
+    {
+      "source_node_id": "node_parse_draft",
+      "target_node_id": "node_store_outreach",
+      "source_handle": "output",
+      "target_handle": "input"
+    },
+    {
+      "source_node_id": "node_store_outreach",
+      "target_node_id": "node_build_draft_record",
+      "source_handle": "output",
+      "target_handle": "input"
+    },
+    {
+      "source_node_id": "node_build_draft_record",
+      "target_node_id": "node_build_approval_email",
+      "source_handle": "output",
+      "target_handle": "input"
+    },
+    {
+      "source_node_id": "node_build_approval_email",
+      "target_node_id": "node_email_approval_request",
+      "source_handle": "output",
+      "target_handle": "input"
+    },
+    {
+      "source_node_id": "node_email_approval_request",
+      "target_node_id": "node_human_approval",
+      "source_handle": "output",
+      "target_handle": "input"
+    },
+    {
+      "source_node_id": "node_human_approval",
+      "target_node_id": "node_mark_approved",
+      "source_handle": "approved",
+      "target_handle": "input"
+    },
+    {
+      "source_node_id": "node_mark_approved",
+      "target_node_id": "node_has_recipient",
+      "source_handle": "output",
+      "target_handle": "input"
+    },
+    {
+      "source_node_id": "node_has_recipient",
+      "target_node_id": "node_send_customer_email",
+      "source_handle": "on_true",
+      "target_handle": "input"
+    },
+    {
+      "source_node_id": "node_send_customer_email",
+      "target_node_id": "node_mark_sent",
+      "source_handle": "output",
+      "target_handle": "input"
+    },
+    {
+      "source_node_id": "node_mark_sent",
+      "target_node_id": "node_done_sent",
+      "source_handle": "output",
+      "target_handle": "input"
+    },
+    {
+      "source_node_id": "node_has_recipient",
+      "target_node_id": "node_notify_no_recipient",
+      "source_handle": "on_false",
+      "target_handle": "input"
+    },
+    {
+      "source_node_id": "node_notify_no_recipient",
+      "target_node_id": "node_mark_no_recipient",
+      "source_handle": "output",
+      "target_handle": "input"
+    },
+    {
+      "source_node_id": "node_mark_no_recipient",
+      "target_node_id": "node_done_no_recipient",
+      "source_handle": "output",
+      "target_handle": "input"
+    },
+    {
+      "source_node_id": "node_human_approval",
+      "target_node_id": "node_mark_rejected",
+      "source_handle": "rejected",
+      "target_handle": "input"
+    },
+    {
+      "source_node_id": "node_mark_rejected",
+      "target_node_id": "node_notify_rejected",
+      "source_handle": "output",
+      "target_handle": "input"
+    },
+    {
+      "source_node_id": "node_notify_rejected",
+      "target_node_id": "node_done_rejected",
+      "source_handle": "output",
+      "target_handle": "input"
+    }
+  ],
+  "groups": [
+    {
+      "name": "Phase 1 - Fetch Research Context",
+      "description": "",
+      "color": "#3b82f6",
+      "position": {
+        "x": -40,
+        "y": 260
+      },
+      "size": {
+        "width": 1120,
+        "height": 300
+      },
+      "node_ids": [
+        "node_webhook_trigger",
+        "node_validate_input",
+        "node_fetch_context",
+        "node_setup_outreach_schema",
+        "node_prepare_context"
+      ]
+    },
+    {
+      "name": "Phase 2 - Draft Outreach",
+      "description": "",
+      "color": "#a855f7",
+      "position": {
+        "x": 1200,
+        "y": 120
+      },
+      "size": {
+        "width": 900,
+        "height": 420
+      },
+      "node_ids": [
+        "node_lm_draft",
+        "node_outreach_agent",
+        "node_parse_draft",
+        "node_store_outreach"
+      ]
+    },
+    {
+      "name": "Phase 3 - Approval",
+      "description": "",
+      "color": "#eab308",
+      "position": {
+        "x": 2220,
+        "y": 260
+      },
+      "size": {
+        "width": 960,
+        "height": 300
+      },
+      "node_ids": [
+        "node_build_draft_record",
+        "node_build_approval_email",
+        "node_human_approval",
+        "node_email_approval_request"
+      ]
+    },
+    {
+      "name": "Phase 4 - Approved Or Rejected Branches",
+      "description": "",
+      "color": "#22c55e",
+      "position": {
+        "x": 3260,
+        "y": 80
+      },
+      "size": {
+        "width": 1200,
+        "height": 620
+      },
+      "node_ids": [
+        "node_mark_approved",
+        "node_has_recipient",
+        "node_send_customer_email",
+        "node_mark_sent",
+        "node_notify_no_recipient",
+        "node_mark_no_recipient",
+        "node_mark_rejected",
+        "node_notify_rejected",
+        "node_done_no_recipient",
+        "node_done_sent",
+        "node_done_rejected"
+      ]
+    }
+  ]
+}

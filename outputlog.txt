@@ -1,0 +1,609 @@
+{
+  "execution_id": "95de931c-ffbf-4ac9-a92a-5945b0c15c0a",
+  "status": "completed",
+  "started_at": "2026-07-05T13:58:55.906563",
+  "completed_at": "2026-07-05T14:01:39.711955",
+  "duration_ms": 163805,
+  "total_nodes": 24,
+  "completed_nodes": 18,
+  "failed_nodes": 0,
+  "error_message": null,
+  "output_data": {
+    "summary": {
+      "total": 24,
+      "failed": 0,
+      "completed": 24
+    },
+    "node_results": {
+      "09d03a35-1e01-4c9d-9c3e-108ab85fbb95": {
+        "status": "completed",
+        "duration_ms": 64343,
+        "output_data": {
+          "title": "Approve exact customer email before sending",
+          "decided_at": "2026-07-05T14:01:17.414319",
+          "description": "Review the exact To, Subject, and Body sent to msesay@dee-empire.com. Company: Auto Hofmann GmbH. Recipient: . Subject: Kurze Idee für Ihre Online-Präsenz. Exact body: Hallo, ich habe mir Ihre Online-Präsenz angesehen und glaube, dass Dee Empire Ihnen mit einer moderneren Website und klarerem Kontakt- oder Buchungsfluss helfen kann. Wenn es passt, sende ich Ihnen gern eine kurze konkrete Idee dazu.\n\nViele Grüße\nMohamed Sesay\nFounder & Automation Consultant\nDee Empire\nForststraße 6, 96264 Altenkunstadt\nmsesay@dee-empire.com\nWhatsApp: +49 152 15461719\ndee-empire.com. Approve only if this exact message is ready to send to the lead. Reject if anything needs revision.",
+          "passthrough": {
+            "to": [
+              "msesay@dee-empire.com"
+            ],
+            "from": "crowpus@dee-empire.com",
+            "message": "Email sent successfully",
+            "sent_at": "2026-07-05T14:00:04.557820",
+            "subject": "Approve exact outreach email: Auto Hofmann GmbH",
+            "provider": "smtp",
+            "message_id": "<178326000106.14.16644409783849277909@crowpus.dev>"
+          },
+          "reject_label": "Reject",
+          "requested_at": "2026-07-05T14:00:08.634538",
+          "active_handle": "approved",
+          "approval_note": null,
+          "approve_label": "Approve",
+          "timeout_seconds": 86400,
+          "default_decision": "reject",
+          "approval_decision": "approve",
+          "approval_decided_by": "c05ef9a5-f275-466f-844f-3527736b7ec0"
+        }
+      },
+      "0ead6dc1-a661-412a-a920-e5b3c227950e": {
+        "reason": "Branch not taken (dep=7e8460e9-7317-48c1-9a1f-4a76c5d0b44f, active=on_false, edges=['on_true'])",
+        "skipped": true
+      },
+      "15a66c4c-d34d-4225-9a90-a1e2a45270b4": {
+        "reason": "Dependency c064a333-311b-4581-b9b5-545d5a308cf8 was skipped",
+        "skipped": true
+      },
+      "19076121-bd79-44fb-aa60-751e82bdc2c4": {
+        "status": "completed",
+        "duration_ms": 1267,
+        "output_data": {
+          "rows": [
+            {
+              "id": 4,
+              "body": "Hallo, ich habe mir Ihre Online-Präsenz angesehen und glaube, dass Dee Empire Ihnen mit einer moderneren Website und klarerem Kontakt- oder Buchungsfluss helfen kann. Wenn es passt, sende ich Ihnen gern eine kurze konkrete Idee dazu.\n\nViele Grüße\nMohamed Sesay\nFounder & Automation Consultant\nDee Empire\nForststraße 6, 96264 Altenkunstadt\nmsesay@dee-empire.com\nWhatsApp: +49 152 15461719\ndee-empire.com",
+              "subject": "Kurze Idee für Ihre Online-Präsenz",
+              "recipient_email": null
+            }
+          ],
+          "query": "UPDATE lead_outreach SET status = 'approved', approval_comment = NULLIF('None',''), approved_at = NOW(), updated_at = NOW() WHERE id::text = '4' RETURNING id, recipient_email, subject, body",
+          "columns": [
+            "id",
+            "recipient_email",
+            "subject",
+            "body"
+          ],
+          "db_type": "postgresql",
+          "row_count": 1,
+          "rows_affected": 1
+        }
+      },
+      "1cf4c7e9-a25b-4da9-87ec-a2a101b17fb1": {
+        "status": "completed",
+        "duration_ms": 1896,
+        "output_data": {
+          "to": [
+            "msesay@dee-empire.com"
+          ],
+          "from": "crowpus@dee-empire.com",
+          "message": "Email sent successfully",
+          "sent_at": "2026-07-05T14:01:30.429113",
+          "subject": "Approved outreach has no recipient: Auto Hofmann GmbH",
+          "provider": "smtp",
+          "message_id": "<178326008853.14.12848100211838013409@crowpus.dev>"
+        }
+      },
+      "3e25f23c-7f5f-4c0d-859b-a293c91a5af8": {
+        "status": "completed",
+        "duration_ms": 86,
+        "output_data": {
+          "city": "unknown",
+          "phone": "09571-5471",
+          "lead_id": "7e6dadf7-e7c9-4444-a865-169795931481",
+          "services": "unknown",
+          "lead_notes": "Guten Tag, ich habe auf Ihrer Webseite gesehen, dass Sie neben klassischen Reparaturen auch einen 24h-Abschleppdienst und sogar einen Hol- und Bring-Service anbieten.",
+          "pain_points": "unknown",
+          "research_id": "7e6dadf7-e7c9-4444-a865-169795931481",
+          "source_urls": "",
+          "website_url": "https://www.auto-hofmann-weingarten.de/startseite",
+          "company_name": "Auto Hofmann GmbH",
+          "business_type": "local business",
+          "outreach_angle": "specific digital improvement opportunity",
+          "missing_systems": "unknown",
+          "recipient_email": "info@auto-hofmann-weingarten.de",
+          "website_quality": "unknown",
+          "confidence_score": 0,
+          "target_customers": "unknown",
+          "recommended_offer": "modern website and automation support"
+        }
+      },
+      "6787c4d9-adf5-47c4-b013-ebe528cd31a8": {
+        "status": "completed",
+        "duration_ms": 3495,
+        "output_data": {
+          "to": [
+            "msesay@dee-empire.com"
+          ],
+          "from": "crowpus@dee-empire.com",
+          "message": "Email sent successfully",
+          "sent_at": "2026-07-05T14:00:04.557820",
+          "subject": "Approve exact outreach email: Auto Hofmann GmbH",
+          "provider": "smtp",
+          "message_id": "<178326000106.14.16644409783849277909@crowpus.dev>"
+        }
+      },
+      "68497482-8add-43dd-9af0-32bcda2d7a8e": {
+        "status": "completed",
+        "duration_ms": 0,
+        "output_data": {
+          "rows": [],
+          "query": "UPDATE lead_outreach SET status = 'approved_no_recipient', approved_at = COALESCE(approved_at, NOW()), updated_at = NOW() WHERE id::text = '4'",
+          "status": "approved_no_recipient",
+          "columns": [],
+          "db_type": "postgresql",
+          "lead_id": "7e6dadf7-e7c9-4444-a865-169795931481",
+          "row_count": 0,
+          "outreach_id": "4",
+          "research_id": "7e6dadf7-e7c9-4444-a865-169795931481",
+          "rows_affected": 1
+        }
+      },
+      "6fdb9891-5fba-4cab-9e94-64880e98cd7b": {
+        "reason": "Dependency b807232d-d9ea-4519-b8f0-c3fd9cb7d183 was skipped",
+        "skipped": true
+      },
+      "75d4e30a-ff63-4dfd-8826-52c044f2c593": {
+        "status": "completed",
+        "duration_ms": 0,
+        "output_data": {
+          "config": {
+            "model": "gemini-2.5-pro",
+            "api_key": "••••pgfA",
+            "api_url": null,
+            "referer": null,
+            "base_url": null,
+            "max_tokens": "••••",
+            "api_version": null,
+            "temperature": 0.7,
+            "organization_id": null
+          },
+          "_provider_kind": "ai_languageModel",
+          "_provider_type": "lm_gemini",
+          "_provider_config": {
+            "model": "gemini-2.5-pro",
+            "api_key": "••••pgfA",
+            "api_url": null,
+            "referer": null,
+            "base_url": null,
+            "max_tokens": "••••",
+            "api_version": null,
+            "temperature": 0.7,
+            "organization_id": null
+          }
+        }
+      },
+      "7e8460e9-7317-48c1-9a1f-4a76c5d0b44f": {
+        "status": "completed",
+        "duration_ms": 0,
+        "output_data": {
+          "rows": [
+            {
+              "id": 4,
+              "body": "Hallo, ich habe mir Ihre Online-Präsenz angesehen und glaube, dass Dee Empire Ihnen mit einer moderneren Website und klarerem Kontakt- oder Buchungsfluss helfen kann. Wenn es passt, sende ich Ihnen gern eine kurze konkrete Idee dazu.\n\nViele Grüße\nMohamed Sesay\nFounder & Automation Consultant\nDee Empire\nForststraße 6, 96264 Altenkunstadt\nmsesay@dee-empire.com\nWhatsApp: +49 152 15461719\ndee-empire.com",
+              "subject": "Kurze Idee für Ihre Online-Präsenz",
+              "recipient_email": null
+            }
+          ],
+          "query": "UPDATE lead_outreach SET status = 'approved', approval_comment = NULLIF('None',''), approved_at = NOW(), updated_at = NOW() WHERE id::text = '4' RETURNING id, recipient_email, subject, body",
+          "branch": "false",
+          "output": false,
+          "columns": [
+            "id",
+            "recipient_email",
+            "subject",
+            "body"
+          ],
+          "db_type": "postgresql",
+          "condition": [
+            {
+              "field": "",
+              "value": "",
+              "operator": "is_not_empty"
+            }
+          ],
+          "row_count": 1,
+          "raw_result": false,
+          "active_handle": "on_false",
+          "rows_affected": 1,
+          "condition_result": false
+        }
+      },
+      "b15e5d03-b702-45c7-b79c-89c78d3fb8d2": {
+        "status": "completed",
+        "duration_ms": 96,
+        "output_data": {
+          "body": "Hallo, ich habe mir Ihre Online-Präsenz angesehen und glaube, dass Dee Empire Ihnen mit einer moderneren Website und klarerem Kontakt- oder Buchungsfluss helfen kann. Wenn es passt, sende ich Ihnen gern eine kurze konkrete Idee dazu.\n\nViele Grüße\nMohamed Sesay\nFounder & Automation Consultant\nDee Empire\nForststraße 6, 96264 Altenkunstadt\nmsesay@dee-empire.com\nWhatsApp: +49 152 15461719\ndee-empire.com",
+          "offer": "modern website and automation support",
+          "lead_id": "7e6dadf7-e7c9-4444-a865-169795931481",
+          "subject": "Kurze Idee für Ihre Online-Präsenz",
+          "pain_point": "digital presence improvement",
+          "outreach_id": "4",
+          "research_id": "7e6dadf7-e7c9-4444-a865-169795931481",
+          "company_name": "Auto Hofmann GmbH",
+          "preview_text": "Kurze Idee für Ihre Online-Präsenz",
+          "followup_days": 3,
+          "has_recipient": "",
+          "call_to_action": "permission to send a short idea",
+          "recipient_email": "",
+          "confidence_score": 50
+        }
+      },
+      "b56a74c1-e9ec-4f55-aa5e-24e3c5c16a91": {
+        "status": "completed",
+        "duration_ms": 1263,
+        "output_data": {
+          "rows": [
+            {
+              "id": 4,
+              "body": "Hallo, ich habe mir Ihre Online-Präsenz angesehen und glaube, dass Dee Empire Ihnen mit einer moderneren Website und klarerem Kontakt- oder Buchungsfluss helfen kann. Wenn es passt, sende ich Ihnen gern eine kurze konkrete Idee dazu.\n\nViele Grüße\nMohamed Sesay\nFounder & Automation Consultant\nDee Empire\nForststraße 6, 96264 Altenkunstadt\nmsesay@dee-empire.com\nWhatsApp: +49 152 15461719\ndee-empire.com",
+              "offer": "modern website and automation support",
+              "status": "pending_approval",
+              "lead_id": "7e6dadf7-e7c9-4444-a865-169795931481",
+              "subject": "Kurze Idee für Ihre Online-Präsenz",
+              "pain_point": "digital presence improvement",
+              "research_id": "7e6dadf7-e7c9-4444-a865-169795931481",
+              "company_name": "Auto Hofmann GmbH",
+              "preview_text": "Kurze Idee für Ihre Online-Präsenz",
+              "followup_days": 3,
+              "call_to_action": "permission to send a short idea",
+              "recipient_email": null,
+              "confidence_score": 50
+            }
+          ],
+          "query": "INSERT INTO lead_outreach (lead_id, research_id, company_name, website_url, recipient_email, subject, body, preview_text, offer, pain_point, call_to_action, tone, followup_days, confidence_score, draft_json, status, created_at, updated_at) VALUES ('7e6dadf7-e7c9-4444-a865-169795931481', '7e6dadf7-e7c9-4444-a865-169795931481', 'Auto Hofmann GmbH', NULLIF(NULLIF('https://www.auto-hofmann-weingarten.de/startseite','N/A'),''), NULLIF('',''), 'Kurze Idee für Ihre Online-Präsenz', 'Hallo, ich habe mir Ihre Online-Präsenz angesehen und glaube, dass Dee Empire Ihnen mit einer moderneren Website und klarerem Kontakt- oder Buchungsfluss helfen kann. Wenn es passt, sende ich Ihnen gern eine kurze konkrete Idee dazu.\n\nViele Grüße\nMohamed Sesay\nFounder & Automation Consultant\nDee Empire\nForststraße 6, 96264 Altenkunstadt\nmsesay@dee-empire.com\nWhatsApp: +49 152 15461719\ndee-empire.com', 'Kurze Idee für Ihre Online-Präsenz', 'modern website and automation support', 'digital presence improvement', 'permission to send a short idea', 'professional_warm', 3, 50, '{}'::jsonb, 'pending_approval', NOW(), NOW()) RETURNING id, lead_id, research_id, company_name, recipient_email, subject, body, preview_text, offer, pain_point, call_to_action, followup_days, confidence_score, status",
+          "columns": [
+            "id",
+            "lead_id",
+            "research_id",
+            "company_name",
+            "recipient_email",
+            "subject",
+            "body",
+            "preview_text",
+            "offer",
+            "pain_point",
+            "call_to_action",
+            "followup_days",
+            "confidence_score",
+            "status"
+          ],
+          "db_type": "postgresql",
+          "row_count": 1,
+          "rows_affected": 1
+        }
+      },
+      "b807232d-d9ea-4519-b8f0-c3fd9cb7d183": {
+        "reason": "Dependency 0ead6dc1-a661-412a-a920-e5b3c227950e was skipped",
+        "skipped": true
+      },
+      "b96ec3ba-d432-41e4-a4e0-3fe380a05a22": {
+        "status": "completed",
+        "duration_ms": 1258,
+        "output_data": {
+          "rows": [
+            {
+              "city": null,
+              "phone": "09571-5471",
+              "lead_id": "7e6dadf7-e7c9-4444-a865-169795931481",
+              "services": null,
+              "lead_notes": "Guten Tag, ich habe auf Ihrer Webseite gesehen, dass Sie neben klassischen Reparaturen auch einen 24h-Abschleppdienst und sogar einen Hol- und Bring-Service anbieten.",
+              "pain_points": null,
+              "research_id": "7e6dadf7-e7c9-4444-a865-169795931481",
+              "source_urls": "[]",
+              "website_url": "https://www.auto-hofmann-weingarten.de/startseite",
+              "company_name": "Auto Hofmann GmbH",
+              "business_type": null,
+              "outreach_angle": "",
+              "missing_systems": "[]",
+              "recipient_email": "info@auto-hofmann-weingarten.de",
+              "website_quality": "",
+              "confidence_score": null,
+              "target_customers": "",
+              "recommended_offer": null
+            }
+          ],
+          "query": "SELECT\n  l.id::text AS research_id,\n  l.id::text AS lead_id,\n  l.company_name,\n  l.website_url,\n  l.city,\n  l.lead_type AS business_type,\n  l.services_summary AS services,\n  '' AS target_customers,\n  '' AS website_quality,\n  '[]'::text AS missing_systems,\n  l.problems_summary AS pain_points,\n  l.outreach_message AS recommended_offer,\n  '' AS outreach_angle,\n  l.lead_score AS confidence_score,\n  '[]'::text AS source_urls,\n  COALESCE(l.email, '')::text AS recipient_email,\n  COALESCE(l.phone, '')::text AS phone,\n  COALESCE(l.notes, '')::text AS lead_notes\nFROM leads l\nWHERE l.id::text = '7e6dadf7-e7c9-4444-a865-169795931481'\nLIMIT 1",
+          "columns": [
+            "research_id",
+            "lead_id",
+            "company_name",
+            "website_url",
+            "city",
+            "business_type",
+            "services",
+            "target_customers",
+            "website_quality",
+            "missing_systems",
+            "pain_points",
+            "recommended_offer",
+            "outreach_angle",
+            "confidence_score",
+            "source_urls",
+            "recipient_email",
+            "phone",
+            "lead_notes"
+          ],
+          "db_type": "postgresql",
+          "row_count": 1,
+          "rows_affected": 1
+        }
+      },
+      "c064a333-311b-4581-b9b5-545d5a308cf8": {
+        "reason": "Dependency f14cfba4-249c-40c7-92ad-1244c1f5434b was skipped",
+        "skipped": true
+      },
+      "c3c9317c-7a83-4b6b-b448-ef018acdb46d": {
+        "status": "completed",
+        "duration_ms": 0,
+        "output_data": {
+          "body": {
+            "lead_id": "7e6dadf7-e7c9-4444-a865-169795931481"
+          },
+          "query": {},
+          "method": "POST",
+          "headers": {},
+          "raw_body": null,
+          "received_at": "2026-07-05T13:58:58.113209",
+          "trigger_data": {
+            "body": {
+              "lead_id": "7e6dadf7-e7c9-4444-a865-169795931481"
+            },
+            "trigger_data": {
+              "body": {
+                "lead_id": "7e6dadf7-e7c9-4444-a865-169795931481"
+              },
+              "query": {},
+              "method": "POST",
+              "headers": {
+                "host": "crowpus.dev",
+                "accept": "*/*",
+                "cf-ray": "a166e30ab868dbdc-FRA",
+                "cdn-loop": "cloudflare; loops=1",
+                "x-scheme": "https",
+                "x-real-ip": "172.71.144.78",
+                "cf-visitor": "{\"scheme\":\"https\"}",
+                "user-agent": "curl/8.7.1",
+                "cf-ipcountry": "DE",
+                "content-type": "application/json",
+                "x-request-id": "65517b6886a9b75542b5b9224ca77405",
+                "content-length": "51",
+                "accept-encoding": "gzip, br",
+                "x-forwarded-for": "81.89.174.42, 172.71.144.78",
+                "cf-connecting-ip": "81.89.174.42",
+                "x-forwarded-host": "crowpus.dev",
+                "x-forwarded-port": "443",
+                "x-forwarded-proto": "https",
+                "x-forwarded-scheme": "https",
+                "x-original-forwarded-for": "81.89.174.42"
+              },
+              "raw_body": "{\"lead_id\": \"7e6dadf7-e7c9-4444-a865-169795931481\"}",
+              "received_at": "2026-07-05T13:58:52.804541",
+              "trigger_type": "webhook"
+            },
+            "trigger_type": "webhook"
+          },
+          "trigger_type": "webhook"
+        }
+      },
+      "c90236e9-9933-4feb-a6aa-2e52abcd2046": {
+        "status": "completed",
+        "duration_ms": 106,
+        "output_data": {
+          "body": "Hallo, ich habe mir Ihre Online-Präsenz angesehen und glaube, dass Dee Empire Ihnen mit einer moderneren Website und klarerem Kontakt- oder Buchungsfluss helfen kann. Wenn es passt, sende ich Ihnen gern eine kurze konkrete Idee dazu.\n\nViele Grüße\nMohamed Sesay\nFounder & Automation Consultant\nDee Empire\nForststraße 6, 96264 Altenkunstadt\nmsesay@dee-empire.com\nWhatsApp: +49 152 15461719\ndee-empire.com",
+          "tone": "professional_warm",
+          "offer": "modern website and automation support",
+          "subject": "Kurze Idee für Ihre Online-Präsenz",
+          "draft_json": "{}",
+          "pain_point": "digital presence improvement",
+          "preview_text": "Kurze Idee für Ihre Online-Präsenz",
+          "followup_days": 3,
+          "call_to_action": "permission to send a short idea",
+          "recipient_email": "",
+          "confidence_score": 50
+        }
+      },
+      "d1ba184b-4502-4e47-9282-59e736300fde": {
+        "status": "completed",
+        "duration_ms": 15967,
+        "output_data": {
+          "model": "gemini-2.5-pro",
+          "result": "```json\n{\n  \"recipient_email\": \"info@auto-hofmann-weingarten.de\",\n  \"subject\": \"Eine Idee für Ihren Hol- und Bring",
+          "tokens": "••••ect]",
+          "messages": [
+            {
+              "role": "user",
+              "content": "You are Dee Empire's B2B outreach copywriter. Create a respectful, personalized cold outreach email using the research below.\n\nSENDER / SIGNATURE:\n- Sender name: Mohamed Sesay\n- Position: Founder & Automation Consultant\n- Company: Dee Empire\n- Address: Forststraße 6, 96264 Altenkunstadt, Germany\n- Email: msesay@dee-empire.com\n- WhatsApp: +49 152 15461719\n- Website: dee-empire.com\n\nBUSINESS:\n- company_name: Auto Hofmann GmbH\n- city: unknown\n- business_type: local business\n- website_url: https://www.auto-hofmann-weingarten.de/startseite\n- services: unknown\n- target_customers: unknown\n- website_quality: unknown\n- missing_systems: unknown\n- pain_points: unknown\n- recommended_offer: modern website and automation support\n- outreach_angle: specific digital improvement opportunity\n- existing_notes: Guten Tag, ich habe auf Ihrer Webseite gesehen, dass Sie neben klassischen Reparaturen auch einen 24h-Abschleppdienst und sogar einen Hol- und Bring-Service anbieten.\n\nWrite in German unless the research clearly suggests another language. Be specific, short, and human. Do not overpromise. Do not sound spammy.\n\nUse this plain human email structure:\n1. Friendly greeting to the business/team.\n2. One sentence showing you actually looked at their business or website.\n3. One simple problem/opportunity from the research.\n4. One clear Dee Empire offer tied to that opportunity.\n5. Soft CTA: ask if you may send a quick idea or if a short call would make sense.\n6. Plain signature exactly with Mohamed Sesay, Founder & Automation Consultant, Dee Empire, Forststraße 6, 96264 Altenkunstadt, msesay@dee-empire.com, WhatsApp: +49 152 15461719, dee-empire.com.\n\nReturn ONLY valid compact JSON:\n{\"recipient_email\":\"info@auto-hofmann-weingarten.de\",\"subject\":\"\",\"preview_text\":\"\",\"body\":\"\",\"pain_point\":\"\",\"offer\":\"\",\"call_to_action\":\"\",\"tone\":\"professional_warm\",\"followup_days\":3,\"confidence_score\":0}\n\nRules:\n- body must be the exact message the lead will receive.\n- body must be plain text, no HTML, no logo, no fancy design, no placeholders.\n- body should be 120-190 words including the full signature.\n- include one specific observation from the research.\n- CTA should ask for a short call or permission to send a quick idea.\n- If recipient_email is empty, keep it empty."
+            },
+            {
+              "role": "assistant",
+              "content": "```json\n{\n  \"recipient_email\": \"info@auto-hofmann-weingarten.de\",\n  \"subject\": \"Eine Idee für Ihren Hol- und Bring"
+            }
+          ],
+          "provider": "gemini",
+          "iterations": 1,
+          "tools_used": [],
+          "_action_log": [
+            {
+              "seq": 1,
+              "input": {
+                "messages": 1,
+                "tools_available": [],
+                "system_prompt_chars": 0
+              },
+              "output": {
+                "tokens": "••••ect]",
+                "content": "```json\n{\n  \"recipient_email\": \"info@auto-hofmann-weingarten.de\",\n  \"subject\": \"Eine Idee für Ihren Hol- und Bring",
+                "tool_calls": []
+              },
+              "service": "llm",
+              "iteration": 1,
+              "duration_ms": 15963
+            }
+          ]
+        }
+      },
+      "db60fd56-2b3e-497c-ba69-ebd63a79a0fe": {
+        "status": "completed",
+        "duration_ms": 1251,
+        "output_data": {
+          "rows": [],
+          "query": "CREATE TABLE IF NOT EXISTS lead_outreach (\n  id BIGSERIAL PRIMARY KEY,\n  lead_id TEXT,\n  research_id TEXT,\n  company_name TEXT,\n  website_url TEXT,\n  recipient_email TEXT,\n  subject TEXT,\n  body TEXT,\n  preview_text TEXT,\n  offer TEXT,\n  pain_point TEXT,\n  call_to_action TEXT,\n  tone TEXT,\n  followup_days INTEGER,\n  confidence_score INTEGER,\n  draft_json JSONB DEFAULT '{}'::jsonb,\n  status TEXT NOT NULL DEFAULT 'draft',\n  approval_comment TEXT,\n  approved_at TIMESTAMPTZ,\n  rejected_at TIMESTAMPTZ,\n  sent_at TIMESTAMPTZ,\n  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),\n  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()\n);\nCREATE INDEX IF NOT EXISTS idx_lead_outreach_lead_id ON lead_outreach (lead_id);\nCREATE INDEX IF NOT EXISTS idx_lead_outreach_research_id ON lead_outreach (research_id);\nCREATE INDEX IF NOT EXISTS idx_lead_outreach_status ON lead_outreach (status);\nCREATE INDEX IF NOT EXISTS idx_lead_outreach_created_at ON lead_outreach (created_at);",
+          "columns": [],
+          "db_type": "postgresql",
+          "row_count": 0,
+          "rows_affected": 0
+        }
+      },
+      "dc50fa68-ac43-4bb1-8f8d-ebc2e52d51ee": {
+        "status": "completed",
+        "duration_ms": 1248,
+        "output_data": {
+          "rows": [],
+          "query": "UPDATE lead_outreach SET status = 'approved_no_recipient', approved_at = COALESCE(approved_at, NOW()), updated_at = NOW() WHERE id::text = '4'",
+          "columns": [],
+          "db_type": "postgresql",
+          "row_count": 0,
+          "rows_affected": 1
+        }
+      },
+      "df275826-854c-4f87-89f3-1d89b51de425": {
+        "status": "completed",
+        "duration_ms": 95,
+        "output_data": {
+          "html": "<div style=\"font-family:Arial,Helvetica,sans-serif;background:#f7f5f0;padding:24px;\"><table width=\"100%\" style=\"max-width:860px;margin:0 auto;background:#fff;border:1px solid #e8e1d0;border-radius:8px;overflow:hidden;\"><tr><td style=\"background:#0a0a0a;padding:22px 28px;\"><span style=\"color:#d4af37;font-size:20px;font-weight:bold;\">DEE EMPIRE</span><span style=\"color:#fff;font-size:12px;float:right;margin-top:6px;\">EXACT OUTREACH SEND PREVIEW</span></td></tr><tr><td style=\"padding:24px 28px;\"><h2 style=\"margin:0 0 6px;color:#0a0a0a;\">Approve the exact customer email</h2><p style=\"color:#555;font-size:13px;margin:0 0 16px;\">This is the exact email that will be sent to the lead if you approve in the workflow execution approval panel.</p><table width=\"100%\" style=\"border-collapse:collapse;font-size:13px;margin-bottom:18px;\"><tr><td style=\"padding:8px;border-top:1px solid #eee;color:#777;width:160px;\">Outreach ID</td><td style=\"padding:8px;border-top:1px solid #eee;\">4</td></tr><tr><td style=\"padding:8px;border-top:1px solid #eee;color:#777;\">Company</td><td style=\"padding:8px;border-top:1px solid #eee;\">Auto Hofmann GmbH</td></tr><tr><td style=\"padding:8px;border-top:1px solid #eee;color:#777;\">Lead recipient</td><td style=\"padding:8px;border-top:1px solid #eee;font-weight:bold;\">NO RECIPIENT EMAIL FOUND</td></tr><tr><td style=\"padding:8px;border-top:1px solid #eee;color:#777;\">Follow-up delay</td><td style=\"padding:8px;border-top:1px solid #eee;\">3 days</td></tr></table><div style=\"border:1px solid #d8d1c2;border-radius:8px;overflow:hidden;margin-top:8px;\"><div style=\"background:#fbf7ec;padding:10px 14px;color:#9c7a1f;font-weight:bold;font-size:12px;letter-spacing:.04em;\">EXACT MESSAGE TO CUSTOMER</div><div style=\"padding:14px 16px;border-bottom:1px solid #eee;font-size:13px;\"><strong>To:</strong> NO RECIPIENT EMAIL FOUND</div><div style=\"padding:14px 16px;border-bottom:1px solid #eee;font-size:13px;\"><strong>Subject:</strong> Kurze Idee für Ihre Online-Präsenz</div><div style=\"padding:16px;white-space:pre-wrap;line-height:1.55;font-size:14px;color:#111;\">Hallo, ich habe mir Ihre Online-Präsenz angesehen und glaube, dass Dee Empire Ihnen mit einer moderneren Website und klarerem Kontakt- oder Buchungsfluss helfen kann. Wenn es passt, sende ich Ihnen gern eine kurze konkrete Idee dazu.\n\nViele Grüße\nMohamed Sesay\nFounder &amp; Automation Consultant\nDee Empire\nForststraße 6, 96264 Altenkunstadt\nmsesay@dee-empire.com\nWhatsApp: +49 152 15461719\ndee-empire.com</div></div><p style=\"margin:16px 0 0;color:#555;font-size:13px;\"><strong>Approval rule:</strong> Approve only if the To, Subject, and Body above are ready to send exactly as shown. Reject if anything needs revision.</p></td></tr><tr><td style=\"background:#0a0a0a;padding:16px 28px;text-align:center;color:#cfcfcf;font-size:11px;\">Dee Empire outreach approval - exact customer preview</td></tr></table></div>",
+          "subject": "Approve exact outreach email: Auto Hofmann GmbH"
+        }
+      },
+      "f14cfba4-249c-40c7-92ad-1244c1f5434b": {
+        "reason": "Branch not taken (dep=09d03a35-1e01-4c9d-9c3e-108ab85fbb95, active=approved, edges=['rejected'])",
+        "skipped": true
+      },
+      "fc7851de-5d10-4237-b586-f8f627fd2c34": {
+        "status": "completed",
+        "duration_ms": 104,
+        "output_data": {
+          "lead_id": "7e6dadf7-e7c9-4444-a865-169795931481",
+          "lead_id_sql": "7e6dadf7-e7c9-4444-a865-169795931481"
+        }
+      }
+    }
+  },
+  "node_results": {
+    "Trigger: Business Outreach": {
+      "status": "completed",
+      "node_type": "trigger_webhook",
+      "output": null,
+      "error": null
+    },
+    "Validate Outreach Input": {
+      "status": "completed",
+      "node_type": "script",
+      "output": null,
+      "error": null
+    },
+    "Setup Outreach Schema": {
+      "status": "completed",
+      "node_type": "database",
+      "output": null,
+      "error": null
+    },
+    "Fetch Lead And Research": {
+      "status": "completed",
+      "node_type": "database",
+      "output": null,
+      "error": null
+    },
+    "Prepare Outreach Context": {
+      "status": "completed",
+      "node_type": "script",
+      "output": null,
+      "error": null
+    },
+    "Gemini 2.5 Pro": {
+      "status": "completed",
+      "node_type": "lm_gemini",
+      "output": null,
+      "error": null
+    },
+    "Outreach Draft Agent": {
+      "status": "completed",
+      "node_type": "ai_agent",
+      "output": null,
+      "error": null
+    },
+    "Parse Outreach Draft": {
+      "status": "completed",
+      "node_type": "script",
+      "output": null,
+      "error": null
+    },
+    "Store Outreach Draft": {
+      "status": "completed",
+      "node_type": "database",
+      "output": null,
+      "error": null
+    },
+    "Build Draft Record": {
+      "status": "completed",
+      "node_type": "script",
+      "output": null,
+      "error": null
+    },
+    "Build Exact Send Preview Email": {
+      "status": "completed",
+      "node_type": "script",
+      "output": null,
+      "error": null
+    },
+    "Email Exact Send Preview To Owner": {
+      "status": "completed",
+      "node_type": "email",
+      "output": null,
+      "error": null
+    },
+    "Human Approval: Send Outreach?": {
+      "status": "completed",
+      "node_type": "human_approval",
+      "output": null,
+      "error": null
+    },
+    "Mark Draft Approved": {
+      "status": "completed",
+      "node_type": "database",
+      "output": null,
+      "error": null
+    },
+    "Has Recipient Email?": {
+      "status": "completed",
+      "node_type": "conditional",
+      "output": null,
+      "error": null
+    },
+    "Notify No Recipient Email": {
+      "status": "completed",
+      "node_type": "email",
+      "output": null,
+      "error": null
+    },
+    "Mark Approved No Recipient": {
+      "status": "completed",
+      "node_type": "database",
+      "output": null,
+      "error": null
+    },
+    "Done: Approved No Recipient": {
+      "status": "completed",
+      "node_type": "set",
+      "output": null,
+      "error": null
+    }
+  }
+}

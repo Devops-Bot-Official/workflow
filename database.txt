@@ -1,0 +1,173 @@
+
+select * from leads
+
+id
+company_name
+contact_name
+email
+phone
+industry
+city
+country
+website_url
+linkedin_url
+instagram_url
+facebook_url
+employee_count
+lead_source
+status
+preferred_language
+company_id
+notes
+created_at
+updated_at
+lead_type
+pipeline_stage
+kanban_card_id
+deal_value_setup
+deal_value_mrr
+qualified_at
+contacted_at
+last_contact_at
+next_followup_at
+discovery_call_at
+proposal_sent_at
+negotiation_at
+won_at
+lost_at
+lost_reason
+whatsapp
+website
+instagram
+linkedin
+github
+tags
+is_active
+lead_score
+score_reason
+decision_maker
+employee_estimate
+urgency
+outreach_subject
+outreach_message
+setup_fee_estimate
+mrr_estimate
+first_contact_channel
+problems_summary
+services_summary
+ee89f466-fe99-41a2-ac86-d11112852bef
+Regenreich – Münsters Internet- und Kommunikationsagentur
+Max Julius Schmittmann
+info@regenreich.com
++49 (0) 251 97442490
+Münster
+DE
+https://www.regenreich.com
+google
+new
+de
+2026-06-11T06:37:54.793703Z
+2026-06-11T06:38:00.344723Z
+tech
+lead_found
+b1eafa38-811b-473e-9f34-a14e4dbe27ec
+[]
+true
+100
+Erreichbarer Kontakt, klare digitale Lücken im Bereich Tool-Management, hohe Branchenrelevanz und etablierte Unternehmensgröße.
+Max Julius Schmittmann, M.A. Geschäftsführender Gesellschafter
+10-20
+high
+Hallo Herr Schmittmann, ich bin auf Regenreich aufmerksam geworden und beeindruckt von Ihrer Arbeit im Bereich Digitalstrategien. Viele erfolgreiche Agenturen wie Ihre kämpfen oft mit einer Zersplitterung ihrer internen Tools, was zu unnötigem Verwaltungsaufwand führen kann. Mit CrowPus Growth helfen wir Agenturen, ihre Prozesse zu konsolidieren und die Effizienz zu steigern. Wäre ein kurzer Austausch dazu für Sie interessant?
+€5.000
+€1.999/mo
+linkedin
+Potenzielle Ineffizienzen durch die Nutzung vieler verschiedener interner Tools (Tool-Wildwuchs).
+CrowPus Growth zur Konsolidierung und Effizienzsteigerung der internen Prozesse.
+3a2be43e-7f6c-4cfa-94be-96ab2ca1a10c
+Kompakt Fit
+info@kompakt-fit.de
+0202 69816901
+Deutschland
+https://www.kompakt-fit.de
+new
+de
+Ihr Ansatz, mit nur zwei 30-minütigen Einheiten pro Woche durch computergesteuertes Training echte Erfolge zu erzielen, hat mich auf Ihrer Website sehr beeindruckt.
+2026-06-18T09:14:29.04648Z
+2026-06-18T09:14:29.04648Z
+lead_found
+[]
+true
+bdce8cac-aacc-4d1b-8060-b69b1ec3703a
+Hautnah wellness-complete
+0234 5307077
+Deutschland
+https://www.hautnah-wellness-complete.de
+new
+de
+Ich habe auf Ihrer Webseite gelesen, dass Sie für Ihre Behandlungen ausschließlich vegane Naturkosmetik von Oceanwell verwenden, was ich sehr beeindruckend finde.
+2026-06-18T09:43:16.107402Z
+2026-06-18T09:43:16.107402Z
+lead_found
+[]
+true
+92e7c4ca-929e-4bcf-8edf-af2adc352974
+Osteopathie Mainz | Team Stickl
+info@osteo-mainz-annastickl.de
+0178 3995761
+Deutschland
+https://osteo-mainz-annastickl.de/termine
+new
+de
+Ich habe auf Ihrer Website gesehen, dass Sie an drei Standorten in Mainz praktizieren, was für Patienten eine tolle und flexible Erreichbarkeit ermöglicht.
+2026-06-18T11:21:55.478813Z
+2026-06-18T11:21:55.478813Z
+lead_found
+[]
+true
+295e175b-4a24-4ca3-bdfe-c9d6409f1a86
+Hans Spindler GmbH
+heizungsbau-spindler@gmx.de
+09261 3490
+Deutschland
+https://spindler-kronach.de
+new
+de
+Ihre über 100-jährige Firmengeschichte und die Erfahrung aus drei Generationen zeigen eindrucksvoll Ihre Kompetenz und Qualität im Bereich Heizung und Sanitär.
+2026-06-18T12:32:25.725047Z
+2026-06-18T12:32:25.725047Z
+lead_found
+[]
+true
+70b85757-fa44-4b40-b677-e4343ecaae4e
+Hairflair
+Michaela Nikolic
+Team@hairflair-hannover.de
+0511/4583787
+Hannover
+DE
+https://www.hairflair-hannover.de
+google
+new
+de
+Website indicates online booking is available, but the specific system is not mentioned. No direct WhatsApp or Instagram links were found. Business research completed. Research ID: 3. Offer: A new, modern website with an integrated, automated online booking system. A chatbot could be added to handle FAQs and appointment queries, freeing up staff time.
+2026-06-10T20:26:50.328146Z
+2026-06-18T17:04:26.980898Z
+salon
+qualified
+1fc9b9d7-c757-4351-99c9-f98bb37bb46f
+2026-06-18T17:04:26.980898Z
+[]
+true
+a2cbe3a5-d775-4c7c-b6ed-e18bf6562613
+Reifen Kühnlein GmbH
+Deutschland
+https://reifen-kuehnlein.de/tuev-pruefstelle
+new
+de
+Ich habe gesehen, dass Sie als offizielle TÜV-Prüfstelle in Partnerschaft mit dem TÜV SÜD neben Hauptuntersuchungen auch Oldtimergutachten und Tuning-Abnahmen anbieten.
+2026-06-19T09:28:26.416279Z
+2026-06-19T09:28:26.416279Z
+lead_found
+[]
+true
