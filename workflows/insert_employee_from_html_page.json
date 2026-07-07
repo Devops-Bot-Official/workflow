@@ -1,0 +1,114 @@
+{
+  "nodes": [
+    {
+      "node_id": "node_start",
+      "type": "start",
+      "name": "Start: Insert Employee From HTML Page",
+      "description": "Manually start a workflow that captures employee details in html_page and inserts them into the employees table.",
+      "parameters": {},
+      "position": { "x": 0, "y": 360 },
+      "is_disabled": false
+    },
+    {
+      "node_id": "node_html_page",
+      "type": "html_page",
+      "name": "Collect Employee Details",
+      "description": "Capture employee details in a dashboard form and pass them downstream through window.workflowOutput.",
+      "parameters": {
+        "title": "Dee Empire - Insert Employee Test",
+        "purpose": "Enter test employee details, click Save For Database, then close the page to continue. This workflow proves html_page can pass values into an employees-table insert node.",
+        "close_label": "Close And Insert",
+        "html": "<!doctype html><html><head><meta charset=\"utf-8\"><meta name=\"viewport\" content=\"width=device-width, initial-scale=1\"><title>Dee Empire Insert Employee Test</title><style>:root{--bg:#f7f5f0;--panel:#ffffff;--ink:#111111;--muted:#6b7280;--line:#e8e1d0;--gold:#d4af37;--shadow:0 18px 60px rgba(0,0,0,.08)}*{box-sizing:border-box}body{margin:0;background:radial-gradient(circle at top,#f3ecd8 0%,#f7f5f0 38%,#efe7d2 100%);font-family:Arial,Helvetica,sans-serif;color:var(--ink)}.wrap{max-width:1040px;margin:24px auto;padding:0 18px 28px}.hero{background:#0a0a0a;color:#fff;border-radius:22px 22px 0 0;padding:28px 30px}.brand{color:var(--gold);font-size:28px;font-weight:700;letter-spacing:1.5px}.sub{margin-top:10px;color:#d1d5db;font-size:15px;line-height:1.6}.panel{background:var(--panel);border:1px solid var(--line);border-top:0;border-radius:0 0 22px 22px;padding:28px;box-shadow:var(--shadow)}.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}.field-full{grid-column:1/-1}label{display:block;font-weight:700;margin:0 0 6px}input,select,textarea{width:100%;padding:12px 13px;border:1px solid #d1d5db;border-radius:12px;font-size:14px;background:#fff}textarea{min-height:110px;resize:vertical}.actions{display:flex;flex-wrap:wrap;gap:12px;margin-top:22px}.button{appearance:none;border:0;border-radius:999px;padding:12px 18px;font-size:14px;font-weight:700;cursor:pointer}.button-primary{background:var(--gold);color:#111}.button-secondary{background:#111;color:#fff}.status{margin-top:18px;padding:14px 16px;border-radius:12px;background:#fbf7ec;border:1px solid var(--line);color:#5b4a18;font-size:14px;line-height:1.5}.payload{margin-top:22px;background:#111;color:#f3f4f6;border-radius:14px;padding:16px;overflow:auto;font:12px/1.6 Consolas,Monaco,monospace;min-height:120px}.hint{margin-top:18px;color:var(--muted);font-size:13px;line-height:1.5}@media (max-width:760px){.grid{grid-template-columns:1fr}.wrap{margin:16px auto}.hero,.panel{padding:20px}.brand{font-size:23px}}</style></head><body><div class=\"wrap\"><div class=\"hero\"><div class=\"brand\">DEE EMPIRE</div><div class=\"sub\">Collect an employee inside html_page, pass it to the next node, and insert it into the employees table.</div></div><div class=\"panel\"><div class=\"grid\"><div><label for=\"full_name\">Full name *</label><input id=\"full_name\" type=\"text\" maxlength=\"255\" placeholder=\"Sabine Kempf\"></div><div><label for=\"role_title\">Role title *</label><input id=\"role_title\" type=\"text\" maxlength=\"255\" placeholder=\"Secretary\"></div><div><label for=\"department\">Department</label><input id=\"department\" type=\"text\" maxlength=\"255\" placeholder=\"Operations\"></div><div><label for=\"email\">Email</label><input id=\"email\" type=\"email\" maxlength=\"255\" placeholder=\"sabine.kempf@dee-empire.com\"></div><div><label for=\"phone\">Phone</label><input id=\"phone\" type=\"tel\" maxlength=\"50\" placeholder=\"09572 8744 123\"></div><div><label for=\"whatsapp\">WhatsApp</label><input id=\"whatsapp\" type=\"tel\" maxlength=\"50\" placeholder=\"09572 8744 123\"></div><div><label for=\"employment_type\">Employment type</label><select id=\"employment_type\"><option value=\"full_time\">full_time</option><option value=\"part_time\">part_time</option><option value=\"contract\">contract</option><option value=\"intern\">intern</option></select></div><div><label for=\"start_date\">Start date</label><input id=\"start_date\" type=\"date\"></div><div><label for=\"preferred_language\">Preferred language</label><select id=\"preferred_language\"><option value=\"de\">de</option><option value=\"en\">en</option><option value=\"tr\">tr</option><option value=\"ar\">ar</option><option value=\"fr\">fr</option><option value=\"pl\">pl</option></select></div><div><label for=\"is_active\">Active status</label><select id=\"is_active\"><option value=\"true\">true</option><option value=\"false\">false</option></select></div><div class=\"field-full\"><label for=\"permissions\">Permissions (comma separated)</label><input id=\"permissions\" type=\"text\" maxlength=\"500\" placeholder=\"crm_read, documents_read, calendar\"></div><div class=\"field-full\"><label for=\"notes\">Notes</label><textarea id=\"notes\" placeholder=\"Inserted from html_page employee test workflow.\"></textarea></div></div><div class=\"actions\"><button class=\"button button-primary\" id=\"save-output\" type=\"button\">Save For Database</button><button class=\"button button-secondary\" id=\"load-sample\" type=\"button\">Load Sample</button></div><div class=\"status\" id=\"status\">No output is ready yet. Click Save For Database before closing the page.</div><pre class=\"payload\" id=\"payload-view\"></pre><div class=\"hint\">This runtime currently returns a <code>page_output</code> object after close, so this page writes to both <code>window.workflowOutput</code> and <code>window.pageOutput</code>.</div></div></div><script>const fields={full_name:document.getElementById('full_name'),role_title:document.getElementById('role_title'),department:document.getElementById('department'),email:document.getElementById('email'),phone:document.getElementById('phone'),whatsapp:document.getElementById('whatsapp'),employment_type:document.getElementById('employment_type'),start_date:document.getElementById('start_date'),preferred_language:document.getElementById('preferred_language'),is_active:document.getElementById('is_active'),permissions:document.getElementById('permissions'),notes:document.getElementById('notes')};const statusEl=document.getElementById('status');const payloadView=document.getElementById('payload-view');const collect=()=>({full_name:(fields.full_name.value||'').trim(),role_title:(fields.role_title.value||'').trim(),department:(fields.department.value||'').trim(),email:(fields.email.value||'').trim(),phone:(fields.phone.value||'').trim(),whatsapp:(fields.whatsapp.value||'').trim(),employment_type:(fields.employment_type.value||'').trim(),start_date:(fields.start_date.value||'').trim(),preferred_language:(fields.preferred_language.value||'').trim(),is_active:(fields.is_active.value||'').trim(),permissions:(fields.permissions.value||'').trim(),notes:(fields.notes.value||'').trim()});const persistOutput=(reason)=>{const payload={status:'ready_for_insert',...collect(),prepared_at:new Date().toISOString(),save_reason:reason||'manual'};window.workflowOutput=payload;window.pageOutput=payload;window.__pageOutput=payload;statusEl.textContent='Output saved for database. You can now close the page.';render();};const render=()=>{payloadView.textContent=JSON.stringify({workflowOutput:window.workflowOutput||null,pageOutput:window.pageOutput||null,__pageOutput:window.__pageOutput||null},null,2);};document.getElementById('load-sample').addEventListener('click',()=>{fields.full_name.value='HTML Test Employee';fields.role_title.value='Workflow Tester';fields.department.value='Operations';fields.email.value='employee-html-test@dee-empire.test';fields.phone.value='09572 8744 999';fields.whatsapp.value='09572 8744 999';fields.employment_type.value='full_time';fields.start_date.value='2026-07-07';fields.preferred_language.value='de';fields.is_active.value='true';fields.permissions.value='crm_read, workflows, employees';fields.notes.value='Inserted from the html_page to employees workflow.';persistOutput('sample_loaded');});document.getElementById('save-output').addEventListener('click',()=>{persistOutput('manual_save');});Object.values(fields).forEach((field)=>{const eventName=field.tagName==='SELECT'?'change':'input';field.addEventListener(eventName,()=>{persistOutput('field_change');});});window.addEventListener('beforeunload',()=>{persistOutput('beforeunload');});render();</script></body></html>"
+      },
+      "position": { "x": 320, "y": 360 },
+      "is_disabled": false
+    },
+    {
+      "node_id": "node_prepare_insert",
+      "type": "script",
+      "name": "Prepare Employee Insert Query",
+      "description": "Normalize html_page output and build a safe SQL insert for the employees table.",
+      "parameters": {
+        "language": "javascript",
+        "script": "module.exports = async function({ input }) {\n  const source = input && typeof input === 'object' ? input : {};\n  const data = source.page_output || source.workflowOutput || source.output || source.data || source.values || source;\n  const text = (key, fallback = '') => {\n    const raw = data && data[key];\n    return raw == null ? fallback : String(raw).trim();\n  };\n  const sqlText = (value) => \"'\" + String(value).replace(/'/g, \"''\") + \"'\";\n  const sqlNullable = (value) => {\n    const clean = String(value == null ? '' : value).trim();\n    return clean ? sqlText(clean) : 'NULL';\n  };\n  const fullName = text('full_name');\n  const roleTitle = text('role_title');\n  if (!fullName) {\n    throw new Error('full_name is required before inserting into employees. page_output=' + JSON.stringify(source.page_output || null));\n  }\n  if (!roleTitle) {\n    throw new Error('role_title is required before inserting into employees. page_output=' + JSON.stringify(source.page_output || null));\n  }\n  const permissions = text('permissions').split(',').map((item) => item.trim()).filter(Boolean);\n  const permissionsJson = JSON.stringify(permissions).replace(/'/g, \"''\");\n  const department = text('department');\n  const email = text('email');\n  const phone = text('phone');\n  const whatsapp = text('whatsapp');\n  const employmentType = text('employment_type', 'full_time') || 'full_time';\n  const startDate = text('start_date');\n  const preferredLanguage = text('preferred_language', 'de') || 'de';\n  const isActive = text('is_active', 'true').toLowerCase() === 'false' ? 'FALSE' : 'TRUE';\n  const preparedAt = text('prepared_at');\n  const notes = [text('notes'), 'Inserted from html_page workflow', preparedAt ? 'Prepared at: ' + preparedAt : ''].filter(Boolean).join(' | ');\n  const query = 'INSERT INTO employees (full_name, role_title, department, email, phone, whatsapp, employment_type, start_date, is_active, preferred_language, permissions, notes) VALUES (' + [sqlText(fullName), sqlText(roleTitle), sqlNullable(department), sqlNullable(email), sqlNullable(phone), sqlNullable(whatsapp), sqlText(employmentType), startDate ? sqlText(startDate + 'T00:00:00Z') : 'NULL', isActive, sqlText(preferredLanguage), \"'\" + permissionsJson + \"'\", sqlNullable(notes)].join(', ') + ') RETURNING id::text AS id, full_name, role_title, department, email, phone, whatsapp, employment_type, start_date::text AS start_date, is_active::text AS is_active, preferred_language, permissions::text AS permissions, created_at::text AS created_at;';\n  return { status: text('status') || 'ready_for_insert', query };\n};"
+      },
+      "position": { "x": 680, "y": 360 },
+      "is_disabled": false
+    },
+    {
+      "node_id": "node_insert_employee",
+      "type": "database",
+      "name": "Insert Employee Into Database",
+      "description": "Insert the html_page data into the employees table and return the inserted row.",
+      "parameters": {
+        "query": "{{node_prepare_insert.query}}",
+        "read_only": false,
+        "limit": 1
+      },
+      "position": { "x": 1040, "y": 360 },
+      "is_disabled": false
+    },
+    {
+      "node_id": "node_done",
+      "type": "set",
+      "name": "Done: Employee Inserted",
+      "description": "Return the key values from the inserted employee so the html_page to database flow can be verified.",
+      "parameters": {
+        "fields": [
+          { "name": "status", "value": "inserted" },
+          { "name": "insert_status", "value": "{{node_prepare_insert.status}}" },
+          { "name": "inserted_employee_id", "value": "{{node_insert_employee.rows.0.id}}" },
+          { "name": "full_name", "value": "{{node_insert_employee.rows.0.full_name}}" },
+          { "name": "role_title", "value": "{{node_insert_employee.rows.0.role_title}}" },
+          { "name": "department", "value": "{{node_insert_employee.rows.0.department}}" },
+          { "name": "email", "value": "{{node_insert_employee.rows.0.email}}" },
+          { "name": "phone", "value": "{{node_insert_employee.rows.0.phone}}" },
+          { "name": "whatsapp", "value": "{{node_insert_employee.rows.0.whatsapp}}" },
+          { "name": "employment_type", "value": "{{node_insert_employee.rows.0.employment_type}}" },
+          { "name": "start_date", "value": "{{node_insert_employee.rows.0.start_date}}" },
+          { "name": "is_active", "value": "{{node_insert_employee.rows.0.is_active}}" },
+          { "name": "preferred_language", "value": "{{node_insert_employee.rows.0.preferred_language}}" },
+          { "name": "permissions", "value": "{{node_insert_employee.rows.0.permissions}}" },
+          { "name": "created_at", "value": "{{node_insert_employee.rows.0.created_at}}" }
+        ]
+      },
+      "position": { "x": 1380, "y": 360 },
+      "is_disabled": false
+    },
+    {
+      "node_id": "note_overview",
+      "type": "note",
+      "name": "Operator Guide",
+      "description": "",
+      "parameters": {
+        "noteText": "INSERT EMPLOYEE FROM HTML PAGE\n\nPurpose:\nProve that html_page can pass values into a downstream employees database write node.\n\nWhat this workflow does:\n- Collect employee details in html_page\n- Normalize and build a SQL INSERT\n- Insert the values into the employees table\n- Return the inserted row for verification\n\nSafety:\n- This workflow WRITES to the database.\n- Use test data only.\n- Prefer clearly identifiable test emails so test rows can be found later."
+      },
+      "position": { "x": 120, "y": -110 },
+      "is_disabled": false
+    }
+  ],
+  "connections": [
+    { "source_node_id": "node_start", "target_node_id": "node_html_page", "source_handle": "output", "target_handle": "input" },
+    { "source_node_id": "node_html_page", "target_node_id": "node_prepare_insert", "source_handle": "output", "target_handle": "input" },
+    { "source_node_id": "node_prepare_insert", "target_node_id": "node_insert_employee", "source_handle": "output", "target_handle": "input" },
+    { "source_node_id": "node_insert_employee", "target_node_id": "node_done", "source_handle": "output", "target_handle": "input" }
+  ],
+  "groups": [
+    {
+      "name": "Phase 1 - Capture Employee Details",
+      "description": "Collect employee details in html_page and prepare a SQL insert query.",
+      "color": "#3b82f6",
+      "position": { "x": -40, "y": 270 },
+      "size": { "width": 980, "height": 270 },
+      "node_ids": ["node_start", "node_html_page", "node_prepare_insert"]
+    },
+    {
+      "name": "Phase 2 - Insert And Verify",
+      "description": "Insert the employee into the database and return the inserted values.",
+      "color": "#22c55e",
+      "position": { "x": 980, "y": 270 },
+      "size": { "width": 560, "height": 270 },
+      "node_ids": ["node_insert_employee", "node_done"]
+    }
+  ]
+}

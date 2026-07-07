@@ -1,0 +1,103 @@
+{
+  "nodes": [
+    {
+      "node_id": "node_start",
+      "type": "start",
+      "name": "Start: No-Website Phone Lead Report",
+      "description": "Manually start the report of leads without a website but with a usable telephone number.",
+      "parameters": {},
+      "position": { "x": 0, "y": 320 },
+      "is_disabled": false
+    },
+    {
+      "node_id": "node_fetch_leads",
+      "type": "database",
+      "name": "Fetch No-Website Leads With Phone",
+      "description": "Read lead ID, company name, and telephone for leads that have no website.",
+      "parameters": {
+        "query": "SELECT id::text AS id, company_name, BTRIM(phone) AS phone FROM leads WHERE (website_url IS NULL OR BTRIM(website_url) = '' OR LOWER(BTRIM(website_url)) IN ('n/a', 'na', 'none', 'null', 'unknown', '-')) AND phone IS NOT NULL AND BTRIM(phone) <> '' AND LOWER(BTRIM(phone)) NOT IN ('n/a', 'na', 'none', 'null', 'unknown', '-') ORDER BY company_name ASC, created_at ASC",
+        "read_only": true,
+        "limit": 10000
+      },
+      "position": { "x": 340, "y": 320 },
+      "is_disabled": false
+    },
+    {
+      "node_id": "node_build_report",
+      "type": "script",
+      "name": "Build Phone Lead Report",
+      "description": "Create a safe Dee Empire HTML report containing lead ID, company name, and phone.",
+      "parameters": {
+        "language": "javascript",
+        "script": "module.exports = async function({ input }) {\n  const rows = Array.isArray(input && input.rows) ? input.rows : [];\n  const escapeHtml = (value) => String(value == null ? '' : value).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/\\\"/g, '&quot;').replace(/'/g, '&#39;');\n  const phoneHref = (value) => String(value == null ? '' : value).replace(/[^+0-9]/g, '');\n  const tableRows = rows.map((row, index) => '<tr>' +\n    '<td style=\"padding:8px 10px;border-bottom:1px solid #e8e1d0;color:#666;\">' + (index + 1) + '</td>' +\n    '<td style=\"padding:8px 10px;border-bottom:1px solid #e8e1d0;font-family:monospace;font-size:12px;\">' + escapeHtml(row.id) + '</td>' +\n    '<td style=\"padding:8px 10px;border-bottom:1px solid #e8e1d0;font-weight:600;\">' + escapeHtml(row.company_name) + '</td>' +\n    '<td style=\"padding:8px 10px;border-bottom:1px solid #e8e1d0;\"><a style=\"color:#9c7a1f;\" href=\"tel:' + escapeHtml(phoneHref(row.phone)) + '\">' + escapeHtml(row.phone) + '</a></td>' +\n    '</tr>').join('');\n  const emptyRow = '<tr><td colspan=\"4\" style=\"padding:18px;color:#666;text-align:center;\">No leads without a website and with a telephone number were found.</td></tr>';\n  const html = '<div style=\"font-family:Arial,Helvetica,sans-serif;background:#f7f5f0;padding:24px;\">' +\n    '<table width=\"100%\" style=\"max-width:980px;margin:0 auto;background:#fff;border:1px solid #e8e1d0;border-radius:8px;border-collapse:separate;border-spacing:0;overflow:hidden;\">' +\n    '<tr><td colspan=\"4\" style=\"background:#0a0a0a;padding:22px 28px;\"><span style=\"color:#d4af37;font-size:20px;font-weight:bold;letter-spacing:1px;\">DEE EMPIRE</span><span style=\"color:#fff;font-size:12px;float:right;margin-top:6px;\">NO-WEBSITE PHONE LEADS</span></td></tr>' +\n    '<tr><td colspan=\"4\" style=\"padding:22px 28px;\"><h2 style=\"margin:0 0 6px;\">' + rows.length + ' leads without a website and with phone</h2><p style=\"margin:0;color:#666;\">Database snapshot generated at ' + escapeHtml(new Date().toISOString()) + '</p></td></tr>' +\n    '<tr style=\"background:#fbf7ec;\"><th align=\"left\" style=\"padding:9px 10px;color:#9c7a1f;\">#</th><th align=\"left\" style=\"padding:9px 10px;color:#9c7a1f;\">Lead ID</th><th align=\"left\" style=\"padding:9px 10px;color:#9c7a1f;\">Company</th><th align=\"left\" style=\"padding:9px 10px;color:#9c7a1f;\">Telephone</th></tr>' +\n    (tableRows || emptyRow) +\n    '<tr><td colspan=\"4\" style=\"background:#0a0a0a;color:#cfcfcf;padding:14px 28px;text-align:center;font-size:11px;\">Dee Empire automated CRM report</td></tr>' +\n    '</table></div>';\n  return { html, count: rows.length, subject: 'Dee Empire CRM: ' + rows.length + ' no-website leads with phone' };\n};"
+      },
+      "position": { "x": 680, "y": 320 },
+      "is_disabled": false
+    },
+    {
+      "node_id": "node_send_report",
+      "type": "email",
+      "name": "Send No-Website Phone Lead Report",
+      "description": "Send the complete no-website phone lead report to Dee Empire.",
+      "parameters": {
+        "to": "msesay@dee-empire.com",
+        "to_email": "msesay@dee-empire.com",
+        "subject": "{{node_build_report.subject}}",
+        "body": "{{node_build_report.html}}",
+        "is_html": true
+      },
+      "position": { "x": 1020, "y": 320 },
+      "is_disabled": false
+    },
+    {
+      "node_id": "node_done",
+      "type": "set",
+      "name": "Done: Phone Lead Report Sent",
+      "description": "Return a stable summary after the internal report email is sent.",
+      "parameters": {
+        "fields": [
+          { "name": "status", "value": "sent" },
+          { "name": "recipient", "value": "msesay@dee-empire.com" },
+          { "name": "lead_count", "value": "{{node_build_report.count}}" }
+        ]
+      },
+      "position": { "x": 1360, "y": 320 },
+      "is_disabled": false
+    },
+    {
+      "node_id": "note_overview",
+      "type": "note",
+      "name": "Operator Guide",
+      "description": "",
+      "parameters": {
+        "noteText": "NO-WEBSITE PHONE LEAD REPORT\n\nPurpose:\nRead all leads that have no website but do have a usable telephone number, then send an internal report to msesay@dee-empire.com.\n\nIncluded fields:\n- Lead ID\n- Company name\n- Telephone\n\nSafety:\n- Database query is read-only.\n- No lead is called or contacted.\n- The only email recipient is Dee Empire.\n- Empty and placeholder website/phone values are normalized.\n\nRequirements:\n- The leads table must exist.\n- The project Email Provider must be configured."
+      },
+      "position": { "x": 120, "y": -80 },
+      "is_disabled": false
+    }
+  ],
+  "connections": [
+    { "source_node_id": "node_start", "target_node_id": "node_fetch_leads", "source_handle": "output", "target_handle": "input" },
+    { "source_node_id": "node_fetch_leads", "target_node_id": "node_build_report", "source_handle": "output", "target_handle": "input" },
+    { "source_node_id": "node_build_report", "target_node_id": "node_send_report", "source_handle": "output", "target_handle": "input" },
+    { "source_node_id": "node_send_report", "target_node_id": "node_done", "source_handle": "output", "target_handle": "input" }
+  ],
+  "groups": [
+    {
+      "name": "Phase 1 - Query No-Website Phone Leads",
+      "description": "Read and format leads without a website that have a telephone number.",
+      "color": "#3b82f6",
+      "position": { "x": -40, "y": 240 },
+      "size": { "width": 900, "height": 250 },
+      "node_ids": ["node_start", "node_fetch_leads", "node_build_report"]
+    },
+    {
+      "name": "Phase 2 - Send Internal Report",
+      "description": "Email the report only to Dee Empire and return a summary.",
+      "color": "#22c55e",
+      "position": { "x": 940, "y": 240 },
+      "size": { "width": 620, "height": 250 },
+      "node_ids": ["node_send_report", "node_done"]
+    }
+  ]
+}

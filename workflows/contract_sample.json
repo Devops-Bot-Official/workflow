@@ -1,0 +1,125 @@
+{
+  "nodes": [
+    {
+      "node_id": "1b8bf63d-1875-42e5-b239-76efb267d0b4",
+      "type": "start",
+      "name": "START",
+      "description": "",
+      "parameters": {},
+      "position": {
+        "x": 0,
+        "y": 0
+      },
+      "is_disabled": false
+    },
+    {
+      "node_id": "ef0893c0-14bb-4022-b7ab-241e774d2ee6",
+      "type": "pdf_render",
+      "name": "Render sample PDF",
+      "description": "",
+      "parameters": {
+        "html": "<!DOCTYPE html><html lang=\"de\"><head><meta charset=\"UTF-8\">\n<style>\n* { margin:0; padding:0; box-sizing:border-box; }\nbody { font-family:Arial,Helvetica,sans-serif; font-size:10pt; color:#1a1a1a; }\n.page { width:210mm; padding:18mm 20mm 28mm 20mm; }\n.hdr  { display:flex; justify-content:space-between; align-items:flex-start;\n        padding-bottom:5mm; border-bottom:2px solid #1a1a1a; margin-bottom:8mm; }\n.logo img { max-height:44px; max-width:160px; }\n.co  { text-align:right; font-size:8pt; color:#555; line-height:1.65; }\n.co strong { display:block; font-size:10.5pt; color:#1a1a1a; margin-bottom:1mm; }\n.meta-row { display:flex; justify-content:space-between; margin-bottom:9mm; }\n.adr { font-size:9pt; line-height:1.75; }\n.adr-lbl { font-size:7pt; text-transform:uppercase; letter-spacing:1px; color:#aaa; margin-bottom:1.5mm; }\n.doc-title { font-size:22pt; font-weight:bold; color:#1a1a1a; margin-bottom:8mm; }\ntable.t { width:100%; border-collapse:collapse; margin-bottom:6mm; font-size:9pt; }\ntable.t thead tr { background:#f5f5f5; }\ntable.t th { padding:2.5mm 3.5mm; font-size:7.5pt; text-transform:uppercase; color:#777;\n             font-weight:bold; border-bottom:1.5px solid #ccc; text-align:left; }\ntable.t th.r, table.t td.r { text-align:right; }\ntable.t tbody tr { border-bottom:1px solid #f0f0f0; }\ntable.t td { padding:3mm 3.5mm; vertical-align:top; }\n.totals-wrap { display:flex; justify-content:flex-end; margin-bottom:8mm; }\n.totals { min-width:70mm; font-size:9pt; }\n.trow { display:flex; justify-content:space-between; padding:1.5mm 0; }\n.trow.sep { border-top:1px solid #ddd; margin-top:1.5mm; padding-top:2.5mm; }\n.trow.bold { font-weight:bold; font-size:11pt; border-top:2px solid #1a1a1a;\n             margin-top:2mm; padding-top:2.5mm; }\n.slbl { font-size:7.5pt; font-weight:bold; text-transform:uppercase; letter-spacing:0.5px;\n        color:#aaa; margin:6mm 0 2mm; }\n.pbox { background:#f8f8f8; border-left:3px solid #ddd; padding:4mm 5mm;\n        font-size:9pt; line-height:1.8; margin-bottom:6mm; }\n.clause { margin-bottom:5mm; }\n.ctitle { font-size:9.5pt; font-weight:bold; margin-bottom:2mm; }\np { font-size:9pt; line-height:1.65; color:#333; margin-bottom:3mm; }\n.sig-row { display:flex; gap:16mm; margin-top:14mm; }\n.sig { flex:1; padding-top:2mm; border-top:1px solid #bbb; font-size:8pt; color:#777; }\n.footer { position:fixed; bottom:10mm; left:20mm; right:20mm; border-top:1px solid #ddd;\n          padding-top:2.5mm; display:flex; justify-content:space-between;\n          font-size:6.5pt; color:#bbb; }</style></head><body><div class=\"page\">\n  <div class=\"hdr\">\n    <div class=\"logo\"><img src=\"https://storage.googleapis.com/dee-empire-artifacts/dee-empire.PNG\" alt=\"Dee Empire\"></div>\n    <div class=\"co\">\n      <strong>Dee Empire</strong>\n      Forststra&szlig;e 6 &middot; 96264 Altenkunstadt<br>\n      admin@dee-empire.com &middot; 09572 8744 123<br>\n      dee-empire.com\n    </div>\n  </div>\n  <div class=\"meta-row\">\n    <div class=\"adr\"><div class=\"adr-lbl\">Auftragnehmer</div>\n      <strong>Dee Empire</strong><br>Mohamed Sesay<br>Forststra&szlig;e 6<br>96264 Altenkunstadt</div>\n    <div class=\"adr\" style=\"text-align:right\">\n      <div class=\"adr-lbl\">Vertragsdaten</div>\n      Vertragsnr.: <strong>DEE-CON-2026-DEMO</strong><br>\n      Datum: 08.06.2026<br>Laufzeit ab: 01.07.2026<br>Mindestlaufzeit: 12 Monate\n    </div>\n  </div>\n  <div class=\"adr-lbl\" style=\"margin-bottom:1.5mm\">Auftraggeber</div>\n  <p style=\"margin-bottom:7mm\"><strong>Mustermann GmbH</strong>, vertreten durch Max Mustermann,\n  Musterstra&szlig;e 1, 12345 Berlin, Deutschland</p>\n  <div class=\"doc-title\">Dienstleistungsvertrag</div>\n  <div class=\"clause\"><div class=\"ctitle\">&#167;&nbsp;1 Vertragsgegenstand</div>\n    <p>Der Auftragnehmer erbringt f&uuml;r den Auftraggeber Dienstleistungen im Bereich\n    KI-Automatisierung, Prozessdigitalisierung und technische Unternehmensberatung.\n    Die konkreten Leistungen umfassen monatliche Beratung, Implementierung und Wartung von\n    KI-Workflows sowie technische Unterst&uuml;tzung.</p></div>\n  <div class=\"clause\"><div class=\"ctitle\">&#167;&nbsp;2 Verg&uuml;tung und Zahlung</div>\n    <p>Die monatliche Verg&uuml;tung betr&auml;gt <strong>1.500,00 EUR</strong> (netto) zzgl. gesetzlicher Mehrwertsteuer.\n    Die Rechnung wird monatlich im Voraus gestellt. Zahlungsziel: <strong>14 Tage</strong> nach Rechnungsdatum.</p>\n    <p>Bankverbindung: IBAN DE71&nbsp;7706&nbsp;1040&nbsp;0002&nbsp;3637&nbsp;3 &middot; BIC GENODEF1ALK</p></div>\n  <div class=\"clause\"><div class=\"ctitle\">&#167;&nbsp;3 Vertragslaufzeit und K&uuml;ndigung</div>\n    <p>Der Vertrag beginnt am <strong>01.07.2026</strong> und hat eine Mindestlaufzeit von <strong>12 Monaten</strong>.\n    Nach Ablauf der Mindestlaufzeit verl&auml;ngert er sich automatisch um je einen Monat, sofern er nicht mit\n    einer Frist von 30 Tagen zum Monatsende schriftlich gek&uuml;ndigt wird.</p></div>\n  <div class=\"clause\"><div class=\"ctitle\">&#167;&nbsp;4 Datenschutz und Vertraulichkeit</div>\n    <p>Beide Parteien verpflichten sich, vertrauliche Informationen nicht an Dritte weiterzugeben.\n    Die Verarbeitung personenbezogener Daten erfolgt gem&auml;&szlig; DSGVO.</p></div>\n  <div class=\"clause\"><div class=\"ctitle\">&#167;&nbsp;5 Haftung</div>\n    <p>Die Haftung des Auftragnehmers ist auf Vorsatz und grobe Fahrl&auml;ssigkeit beschr&auml;nkt.\n    Eine Haftung f&uuml;r mittelbare Sch&auml;den oder entgangenen Gewinn ist ausgeschlossen,\n    soweit gesetzlich zul&auml;ssig.</p></div>\n  <div class=\"clause\"><div class=\"ctitle\">&#167;&nbsp;6 Anwendbares Recht und Gerichtsstand</div>\n    <p>Es gilt deutsches Recht. Gerichtsstand ist Lichtenfels (Bayern), sofern der Auftraggeber Kaufmann ist.</p></div>\n  <div class=\"sig-row\" style=\"margin-top:14mm;\">\n    <div class=\"sig\"><div style=\"margin-bottom:10mm;color:#ccc;font-size:8pt;\">Ort, Datum</div>Dee Empire &middot; Mohamed Sesay</div>\n    <div class=\"sig\"><div style=\"margin-bottom:10mm;color:#ccc;font-size:8pt;\">Ort, Datum</div>Mustermann GmbH &middot; Max Mustermann</div>\n  </div>\n  <div class=\"footer\">\n    <span>Dee Empire &middot; Forststra&szlig;e 6 &middot; 96264 Altenkunstadt</span>\n    <span>St.-Nr.: 230/274/01007 &middot; USt-IdNr.: DE455289768</span>\n    <span>IBAN: DE7177061040000236373 &middot; BIC: GENODEF1ALK</span>\n  </div></div></body></html>",
+        "margin": "10mm",
+        "filename": "sample-contract.pdf",
+        "page_size": "A4"
+      },
+      "position": {
+        "x": 200,
+        "y": 0
+      },
+      "is_disabled": false
+    },
+    {
+      "node_id": "96985d87-b3d0-4d61-9650-a93518876222",
+      "type": "storage_upload",
+      "name": "Upload to templates/samples/",
+      "description": "",
+      "parameters": {
+        "body": "{{path}}",
+        "bucket": "crowpus-docs-bucket",
+        "object_name": "templates/samples/sample-contract.pdf",
+        "content_type": "application/pdf"
+      },
+      "position": {
+        "x": 400,
+        "y": 0
+      },
+      "is_disabled": false
+    },
+    {
+      "node_id": "0d3700b5-353a-48c5-8417-ae740ee074cc",
+      "type": "storage_signed_url",
+      "name": "Generate signed URL",
+      "description": "",
+      "parameters": {
+        "bucket": "crowpus-docs-bucket",
+        "method": "GET",
+        "expires_in": 604800,
+        "object_name": "templates/samples/sample-contract.pdf"
+      },
+      "position": {
+        "x": 600,
+        "y": 0
+      },
+      "is_disabled": false
+    },
+    {
+      "node_id": "ae07ea0c-4a4f-4754-b84e-51ad8fdf5789",
+      "type": "set",
+      "name": "DONE — signed URL",
+      "description": "",
+      "parameters": {
+        "fields": [
+          {
+            "name": "status",
+            "value": "success"
+          },
+          {
+            "name": "document_type",
+            "value": "contract"
+          },
+          {
+            "name": "signed_url",
+            "value": "{{url}}"
+          },
+          {
+            "name": "storage_path",
+            "value": "templates/samples/sample-contract.pdf"
+          }
+        ]
+      },
+      "position": {
+        "x": 800,
+        "y": 0
+      },
+      "is_disabled": false
+    }
+  ],
+  "connections": [
+    {
+      "source_node_id": "1b8bf63d-1875-42e5-b239-76efb267d0b4",
+      "target_node_id": "ef0893c0-14bb-4022-b7ab-241e774d2ee6",
+      "source_handle": "output",
+      "target_handle": "input"
+    },
+    {
+      "source_node_id": "ef0893c0-14bb-4022-b7ab-241e774d2ee6",
+      "target_node_id": "96985d87-b3d0-4d61-9650-a93518876222",
+      "source_handle": "output",
+      "target_handle": "input"
+    },
+    {
+      "source_node_id": "96985d87-b3d0-4d61-9650-a93518876222",
+      "target_node_id": "0d3700b5-353a-48c5-8417-ae740ee074cc",
+      "source_handle": "output",
+      "target_handle": "input"
+    },
+    {
+      "source_node_id": "0d3700b5-353a-48c5-8417-ae740ee074cc",
+      "target_node_id": "ae07ea0c-4a4f-4754-b84e-51ad8fdf5789",
+      "source_handle": "output",
+      "target_handle": "input"
+    }
+  ],
+  "groups": []
+}

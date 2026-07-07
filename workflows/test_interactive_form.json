@@ -1,0 +1,112 @@
+{
+  "nodes": [
+    {
+      "node_id": "node_start",
+      "type": "start",
+      "name": "Start: HTML Page Test",
+      "description": "Manually start a safe test of the new html_page node.",
+      "parameters": {},
+      "position": { "x": 0, "y": 320 },
+      "is_disabled": false
+    },
+    {
+      "node_id": "node_html_page",
+      "type": "html_page",
+      "name": "Open Test Lead Page",
+      "description": "Open a rendered HTML page, let the operator set output values, then continue when the page is closed.",
+      "parameters": {
+        "title": "Dee Empire - HTML Page Test",
+        "purpose": "Test the new html_page node using safe sample data. This page does not write to the database or contact anyone. Click Apply Output before closing the page if you want the next node to receive your values.",
+        "close_label": "Close and Continue",
+        "html": "<!doctype html><html><head><meta charset=\"utf-8\"><meta name=\"viewport\" content=\"width=device-width, initial-scale=1\"><title>Dee Empire HTML Page Test</title><style>:root{--bg:#f7f5f0;--panel:#ffffff;--ink:#111111;--muted:#6b7280;--line:#e8e1d0;--gold:#d4af37;--gold-dark:#9c7a1f;}*{box-sizing:border-box}body{margin:0;background:linear-gradient(180deg,#f7f5f0 0%,#efe7d2 100%);font-family:Arial,Helvetica,sans-serif;color:var(--ink)}.wrap{max-width:920px;margin:32px auto;padding:0 16px}.hero{background:#0a0a0a;color:#fff;border-radius:18px 18px 0 0;padding:26px 28px}.brand{color:var(--gold);font-size:24px;font-weight:700;letter-spacing:1px}.sub{margin-top:8px;color:#d1d5db;font-size:14px;line-height:1.5}.panel{background:var(--panel);border:1px solid var(--line);border-top:0;border-radius:0 0 18px 18px;padding:28px;box-shadow:0 18px 60px rgba(0,0,0,.08)}.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}.field-full{grid-column:1/-1}label{display:block;font-weight:600;margin:0 0 6px}input,select{width:100%;padding:12px 13px;border:1px solid #d1d5db;border-radius:10px;font-size:14px;background:#fff}.actions{display:flex;flex-wrap:wrap;gap:12px;margin-top:22px}.button{appearance:none;border:0;border-radius:999px;padding:12px 18px;font-size:14px;font-weight:700;cursor:pointer}.button-primary{background:var(--gold);color:#111}.button-secondary{background:#111;color:#fff}.status{margin-top:18px;padding:14px 16px;border-radius:12px;background:#fbf7ec;border:1px solid var(--line);color:#5b4a18;font-size:14px;line-height:1.5}.payload{margin-top:22px;background:#111;color:#f3f4f6;border-radius:14px;padding:16px;overflow:auto;font:12px/1.6 Consolas,Monaco,monospace;min-height:120px}.hint{margin-top:18px;color:var(--muted);font-size:13px;line-height:1.5}@media (max-width:720px){.grid{grid-template-columns:1fr}.wrap{margin:18px auto}.hero,.panel{padding:20px}}</style></head><body><div class=\"wrap\"><div class=\"hero\"><div class=\"brand\">DEE EMPIRE</div><div class=\"sub\">html_page runtime test. The workflow pauses while this page is open. Set output data here, then close the page to continue.</div></div><div class=\"panel\"><div class=\"grid\"><div><label for=\"company_name\">Company name</label><input id=\"company_name\" type=\"text\" maxlength=\"255\" placeholder=\"Example GmbH\"></div><div><label for=\"contact_name\">Contact name</label><input id=\"contact_name\" type=\"text\" maxlength=\"255\" placeholder=\"Erika Mustermann\"></div><div><label for=\"email\">Email</label><input id=\"email\" type=\"email\" maxlength=\"255\" placeholder=\"test@example.com\"></div><div><label for=\"phone\">Telephone</label><input id=\"phone\" type=\"tel\" maxlength=\"50\" placeholder=\"+49 123 456789\"></div><div class=\"field-full\"><label for=\"interest\">Service interest</label><select id=\"interest\"><option value=\"website\">Website</option><option value=\"workflow\">Workflow automation</option><option value=\"ai_agent\">AI agent</option><option value=\"appointments\">Appointment automation</option></select></div></div><div class=\"actions\"><button class=\"button button-primary\" id=\"apply-output\" type=\"button\">Apply Output</button><button class=\"button button-secondary\" id=\"load-sample\" type=\"button\">Load Sample Data</button></div><div class=\"status\" id=\"status\">No output has been prepared yet. Click Apply Output, then close the page to continue the workflow.</div><pre class=\"payload\" id=\"payload-view\"></pre><div class=\"hint\">Incoming data from the previous node is available as <code>window.workflowInput</code>. This page writes values to <code>window.workflowOutput</code>.</div></div></div><script>const input = window.workflowInput || {};const fields={company_name:document.getElementById('company_name'),contact_name:document.getElementById('contact_name'),email:document.getElementById('email'),phone:document.getElementById('phone'),interest:document.getElementById('interest')};const statusEl=document.getElementById('status');const payloadView=document.getElementById('payload-view');const readValues=()=>({company_name:(fields.company_name.value||'').trim(),contact_name:(fields.contact_name.value||'').trim(),email:(fields.email.value||'').trim(),phone:(fields.phone.value||'').trim(),interest:(fields.interest.value||'').trim()});const renderPayload=()=>{payloadView.textContent=JSON.stringify({workflowInput:input,workflowOutput:window.workflowOutput||null},null,2);};const prefillFromInput=()=>{const source=input.form_data||input.formData||input.values||input.data||input.submission||input.output||input;for(const key of Object.keys(fields)){if(source&&source[key]!=null&&String(fields[key].value||'').trim()===''){fields[key].value=String(source[key]);}}};document.getElementById('load-sample').addEventListener('click',()=>{fields.company_name.value='Dee Empire Sample Lead';fields.contact_name.value='M Sesay';fields.email.value='sample@dee-empire.test';fields.phone.value='+49 123 456789';fields.interest.value='workflow';statusEl.textContent='Sample data loaded. Click Apply Output to store it for the workflow.';renderPayload();});document.getElementById('apply-output').addEventListener('click',()=>{const values=readValues();window.workflowOutput={status:'html_page_output_ready',...values,prepared_at:new Date().toISOString()};statusEl.textContent='Output prepared. You can now close the page to continue the workflow.';renderPayload();});prefillFromInput();renderPayload();</script></body></html>"
+      },
+      "position": { "x": 360, "y": 320 },
+      "is_disabled": false
+    },
+    {
+      "node_id": "node_normalize_submission",
+      "type": "script",
+      "name": "Normalize Page Output",
+      "description": "Normalize likely html_page payload shapes and expose the full downstream payload for runtime verification.",
+      "parameters": {
+        "language": "javascript",
+        "script": "module.exports = async function({ input }) {\n  const source = input && typeof input === 'object' ? input : {};\n  const candidates = [\n    ['workflowOutput', source.workflowOutput],\n    ['output', source.output],\n    ['data', source.data],\n    ['values', source.values],\n    ['root', source]\n  ];\n  const selected = candidates.find(([, value]) => value && typeof value === 'object') || ['root', source];\n  const candidatePath = selected[0];\n  const candidate = selected[1] || {};\n  const value = (key) => {\n    const raw = candidate && candidate[key];\n    if (Array.isArray(raw)) return raw.join(', ');\n    if (raw == null) return '';\n    return String(raw).trim();\n  };\n  return {\n    status: value('status') || 'html_page_closed',\n    company_name: value('company_name'),\n    contact_name: value('contact_name'),\n    email: value('email'),\n    phone: value('phone'),\n    interest: value('interest'),\n    prepared_at: value('prepared_at'),\n    candidate_path: candidatePath,\n    has_workflow_output: !!(source && source.workflowOutput),\n    has_output: !!(source && source.output),\n    has_data: !!(source && source.data),\n    has_values: !!(source && source.values),\n    debug_payload_json: JSON.stringify(source, null, 2),\n    debug_candidate_json: JSON.stringify(candidate, null, 2),\n    received_at: new Date().toISOString(),\n    raw_submission: source\n  };\n};"
+      },
+      "position": { "x": 760, "y": 320 },
+      "is_disabled": false
+    },
+    {
+      "node_id": "node_done",
+      "type": "set",
+      "name": "Done: HTML Page Closed",
+      "description": "Return normalized values so the html_page output can be inspected safely.",
+      "parameters": {
+        "fields": [
+          { "name": "status", "value": "{{node_normalize_submission.status}}" },
+          { "name": "company_name", "value": "{{node_normalize_submission.company_name}}" },
+          { "name": "contact_name", "value": "{{node_normalize_submission.contact_name}}" },
+          { "name": "email", "value": "{{node_normalize_submission.email}}" },
+          { "name": "phone", "value": "{{node_normalize_submission.phone}}" },
+          { "name": "interest", "value": "{{node_normalize_submission.interest}}" },
+          { "name": "prepared_at", "value": "{{node_normalize_submission.prepared_at}}" },
+          { "name": "candidate_path", "value": "{{node_normalize_submission.candidate_path}}" },
+          { "name": "has_workflow_output", "value": "{{node_normalize_submission.has_workflow_output}}" },
+          { "name": "has_output", "value": "{{node_normalize_submission.has_output}}" },
+          { "name": "has_data", "value": "{{node_normalize_submission.has_data}}" },
+          { "name": "has_values", "value": "{{node_normalize_submission.has_values}}" },
+          { "name": "debug_candidate_json", "value": "{{node_normalize_submission.debug_candidate_json}}" },
+          { "name": "debug_payload_json", "value": "{{node_normalize_submission.debug_payload_json}}" },
+          { "name": "received_at", "value": "{{node_normalize_submission.received_at}}" }
+        ]
+      },
+      "position": { "x": 1140, "y": 320 },
+      "is_disabled": false
+    },
+    {
+      "node_id": "note_overview",
+      "type": "note",
+      "name": "HTML Page Test Guide",
+      "description": "",
+      "parameters": {
+        "noteText": "HTML PAGE TEST\n\nPurpose:\nTest the new html_page node without writing to the database or contacting anyone.\n\nSafe test:\n1. Start the workflow manually.\n2. Confirm execution pauses at Open Test Lead Page.\n3. Enter sample values or click Load Sample Data.\n4. Click Apply Output.\n5. Close the page to continue the workflow.\n6. Inspect Normalize Page Output and Done: HTML Page Closed.\n7. Check candidate_path, debug_candidate_json, and debug_payload_json to see the exact downstream payload shape.\n\nExpected routing:\nStart -> HTML Page -> Normalize Output -> Done.\n\nRuntime note:\n- The page receives prior payload in window.workflowInput.\n- The page sends values forward through window.workflowOutput.\n- The workflow resumes through the normal output handle when the page is closed.\n\nNo database, email, webhook, or customer side effects occur."
+      },
+      "position": { "x": 180, "y": -120 },
+      "is_disabled": false
+    }
+  ],
+  "connections": [
+    {
+      "source_node_id": "node_start",
+      "target_node_id": "node_html_page",
+      "source_handle": "output",
+      "target_handle": "input"
+    },
+    {
+      "source_node_id": "node_html_page",
+      "target_node_id": "node_normalize_submission",
+      "source_handle": "output",
+      "target_handle": "input"
+    },
+    {
+      "source_node_id": "node_normalize_submission",
+      "target_node_id": "node_done",
+      "source_handle": "output",
+      "target_handle": "input"
+    }
+  ],
+  "groups": [
+    {
+      "name": "HTML Page Test",
+      "description": "Pause for operator interaction, capture optional workflow output, and return a safe test result.",
+      "color": "#d4af37",
+      "position": { "x": -40, "y": 240 },
+      "size": { "width": 1400, "height": 260 },
+      "node_ids": [
+        "node_start",
+        "node_html_page",
+        "node_normalize_submission",
+        "node_done"
+      ]
+    }
+  ]
+}

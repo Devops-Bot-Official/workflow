@@ -1,0 +1,174 @@
+{
+  "nodes": [
+    {
+      "node_id": "ef6b9f78-69de-44ba-8ff4-d734a8e25bb3",
+      "type": "start",
+      "name": "START — Contract inputs",
+      "description": "",
+      "parameters": {},
+      "position": {
+        "x": 0,
+        "y": 0
+      },
+      "is_disabled": false
+    },
+    {
+      "node_id": "abf86aea-98ae-4ca1-8838-df5b090eddc8",
+      "type": "database",
+      "name": "Step 1 — Assign contract number",
+      "description": "",
+      "parameters": {
+        "query": "\nUPDATE document_sequences\nSET last_number = last_number + 1,\n    updated_at  = NOW()\nWHERE document_type = 'contract'\n  AND year = EXTRACT(YEAR FROM NOW())::int\nRETURNING\n  prefix || '-' || year::text || '-' || LPAD(last_number::text, 3, '0') AS document_number;"
+      },
+      "position": {
+        "x": 200,
+        "y": 0
+      },
+      "is_disabled": false
+    },
+    {
+      "node_id": "3c6748cb-b0ab-44d6-840c-034b48b286af",
+      "type": "database",
+      "name": "Step 2 — Get customer details",
+      "description": "",
+      "parameters": {
+        "query": "\nSELECT\n  COALESCE(company_name, full_name, name, '')    AS client_company_name,\n  COALESCE(contact_name, full_name, '')          AS client_contact_name,\n  COALESCE(street, address_street, '')           AS client_street,\n  COALESCE(zip, postal_code, '')                 AS client_zip,\n  COALESCE(city, '')                             AS client_city,\n  COALESCE(country, 'Deutschland')               AS client_country,\n  COALESCE(vat_id, '')                           AS client_vat_id\nFROM customers\nWHERE id = '{{customer_id}}'::uuid\nLIMIT 1;"
+      },
+      "position": {
+        "x": 400,
+        "y": 0
+      },
+      "is_disabled": false
+    },
+    {
+      "node_id": "806e2fab-92c1-4774-a409-f7f95fb58da9",
+      "type": "database",
+      "name": "Step 3 — Create draft document record",
+      "description": "",
+      "parameters": {
+        "query": "\nINSERT INTO documents (\n  document_number,\n  document_type,\n  title,\n  language,\n  status,\n  customer_id,\n  amount_net,\n  amount_gross,\n  currency,\n  file_format,\n  mime_type,\n  generated_by,\n  tags,\n  expires_at,\n  notes\n)\nVALUES (\n  '{{document_number}}',\n  'contract',\n  'Dienstleistungsvertrag {{document_number}}',\n  '{{language}}',\n  'draft',\n  '{{customer_id}}'::uuid,\n  '{{monthly_fee_num}}'::numeric,\n  '{{monthly_fee_num}}'::numeric,\n  'EUR',\n  'pdf',\n  'application/pdf',\n  'GENERATE-contract',\n  jsonb_build_object(\n    'template_key',      'contract_template',\n    'proposal_number',   '{{proposal_number}}',\n    'start_date',        '{{start_date}}',\n    'minimum_term',      '{{minimum_term}}',\n    'notice_period',     '{{notice_period}}',\n    'services_rows',     '{{services_rows}}',\n    'setup_fee',         '{{setup_fee}}',\n    'monthly_fee',       '{{monthly_fee}}',\n    'client_vat_id',     '{{client_vat_id}}'\n  ),\n  CASE\n    WHEN '{{minimum_term}}' ~ '^d+$'\n    THEN '{{start_date}}'::date + ('{{minimum_term}}' || ' months')::interval\n    ELSE NULL\n  END,\n  NULLIF('{{notes}}', '')\n)\nRETURNING\n  id::text        AS document_id,\n  document_number,\n  status,\n  expires_at::date::text AS contract_end_date;"
+      },
+      "position": {
+        "x": 600,
+        "y": 0
+      },
+      "is_disabled": false
+    },
+    {
+      "node_id": "6bcad3c7-6e2c-40fc-9669-2c4c10c6501b",
+      "type": "set",
+      "name": "Step 4 — Output (ready for PDF renderer)",
+      "description": "",
+      "parameters": {
+        "fields": [
+          {
+            "name": "status",
+            "value": "success"
+          },
+          {
+            "name": "document_number",
+            "value": "{{document_number}}"
+          },
+          {
+            "name": "document_id",
+            "value": "{{document_id}}"
+          },
+          {
+            "name": "contract_end_date",
+            "value": "{{contract_end_date}}"
+          },
+          {
+            "name": "client_company",
+            "value": "{{client_company_name}}"
+          },
+          {
+            "name": "template_key",
+            "value": "contract_template"
+          },
+          {
+            "name": "language",
+            "value": "{{language}}"
+          },
+          {
+            "name": "next_step",
+            "value": "POST document_id + variables to PDF renderer → upload to contracts/YEAR/document_number.pdf → UPDATE documents"
+          }
+        ]
+      },
+      "position": {
+        "x": 800,
+        "y": 0
+      },
+      "is_disabled": false
+    },
+    {
+      "node_id": "edd09a9c-639d-4efc-b1a3-7ebc217f6fdf",
+      "type": "note",
+      "name": "📋 How to use",
+      "description": "",
+      "parameters": {
+        "noteText": "GENERATE-contract — Creates a numbered service contract record\n\nREQUIRED INPUTS:\n  customer_id      UUID    ID from customers table\n                           (convert lead first if needed)\n  language         TEXT    de / en\n  start_date       TEXT    contract start  e.g. \"2026-07-01\"\n  minimum_term     TEXT    months as integer e.g. \"12\"\n  notice_period    TEXT    e.g. \"3\" (months)\n  services_rows    TEXT    HTML <tr> rows for services table\n  setup_fee        TEXT    display value  e.g. \"1.490,00 €\"\n  monthly_fee      TEXT    display value  e.g. \"299,00 €\"\n  monthly_fee_num  NUMBER  299.00  (numeric, for DB)\n\nOPTIONAL:\n  proposal_number  TEXT    linked proposal  e.g. \"DEE-PRO-2026-001\"\n  client_vat_id    TEXT    override if different from customers table\n  notes            TEXT    internal notes\n\nservices_rows FORMAT (HTML):\n  <tr>\n    <td>KI-Buchungsassistent</td>\n    <td>Einmalig</td>\n    <td class=\"num\">1.490,00 €</td>\n  </tr>\n  <tr>\n    <td>Monatliche Wartung &amp; Support</td>\n    <td>Monatlich</td>\n    <td class=\"num\">299,00 €</td>\n  </tr>\n\nOUTPUT:\n  document_number   DEE-CON-2026-001\n  document_id       UUID of the documents record\n  contract_end_date start_date + minimum_term months (auto-calculated)\n  status            draft\n\nAFTER CONTRACT IS SIGNED:\n  UPDATE documents\n  SET status    = 'signed',\n      signed_at = NOW()\n  WHERE id = '{{document_id}}'::uuid"
+      },
+      "position": {
+        "x": -340,
+        "y": 180
+      },
+      "is_disabled": false
+    },
+    {
+      "node_id": "8bf980f5-d823-49db-bd7d-0380138c8f93",
+      "type": "note",
+      "name": "🔄 Full pipeline flow",
+      "description": "",
+      "parameters": {
+        "noteText": "GENERATE-contract — 4-step pipeline\n\nStep 1 — DB: Assign contract number\n  UPDATE document_sequences (atomic)\n  → document_number = DEE-CON-2026-001\n\nStep 2 — DB: Get customer details\n  SELECT from customers WHERE id = {{customer_id}}\n  → client_company_name, client_contact_name,\n    address fields, client_vat_id\n\nStep 3 — DB: Create draft document record\n  expires_at = start_date + minimum_term months\n    (computed with PostgreSQL interval arithmetic)\n  tags JSONB stores: proposal_number, start_date,\n    minimum_term, notice_period, services, fees\n  → document_id, document_number, contract_end_date\n\nStep 4 — SET: Output for PDF renderer\n  All variables needed for contract_template HTML render.\n\n── DOCUMENT LIFECYCLE ────────────────────────────────────\n  draft    → generated, not yet sent\n  sent     → sent to client for review\n  signed   → client signed (set signed_at = NOW())\n  archived → end of contract term\n\n── LINKS TO OTHER DOCUMENTS ─────────────────────────────\n  proposal_number → links back to GENERATE-proposal output\n  After signing → run GENERATE-invoice monthly with\n    customer_id from this contract"
+      },
+      "position": {
+        "x": 200,
+        "y": 200
+      },
+      "is_disabled": false
+    },
+    {
+      "node_id": "9479f0aa-2abc-4714-b17d-5df73713d4ac",
+      "type": "note",
+      "name": "📄 Template variables reference",
+      "description": "",
+      "parameters": {
+        "noteText": "contract_template — all {{variables}} needed\n\nDocument info:\n  contract_number     DEE-CON-2026-001\n  contract_date       08.06.2026\n  start_date          01.07.2026\n  minimum_term        12  (months)\n  notice_period       3   (months)\n  proposal_number     DEE-PRO-2026-001 (if linked)\n\nClient info (from customers):\n  client_company_name\n  client_contact_name\n  client_street / client_zip / client_city / client_country\n  client_vat_id\n\nServices & financials:\n  services_rows       HTML <tr> rows\n  setup_fee           \"1.490,00 €\"\n  monthly_fee         \"299,00 €\"\n\nStorage path after upload:\n  storage_key    contracts/2026/DEE-CON-2026-001.pdf\n  storage_bucket crowpus-docs-bucket"
+      },
+      "position": {
+        "x": 720,
+        "y": 220
+      },
+      "is_disabled": false
+    }
+  ],
+  "connections": [
+    {
+      "source_node_id": "ef6b9f78-69de-44ba-8ff4-d734a8e25bb3",
+      "target_node_id": "abf86aea-98ae-4ca1-8838-df5b090eddc8",
+      "source_handle": "output",
+      "target_handle": "input"
+    },
+    {
+      "source_node_id": "abf86aea-98ae-4ca1-8838-df5b090eddc8",
+      "target_node_id": "3c6748cb-b0ab-44d6-840c-034b48b286af",
+      "source_handle": "output",
+      "target_handle": "input"
+    },
+    {
+      "source_node_id": "3c6748cb-b0ab-44d6-840c-034b48b286af",
+      "target_node_id": "806e2fab-92c1-4774-a409-f7f95fb58da9",
+      "source_handle": "output",
+      "target_handle": "input"
+    },
+    {
+      "source_node_id": "806e2fab-92c1-4774-a409-f7f95fb58da9",
+      "target_node_id": "6bcad3c7-6e2c-40fc-9669-2c4c10c6501b",
+      "source_handle": "output",
+      "target_handle": "input"
+    }
+  ],
+  "groups": []
+}

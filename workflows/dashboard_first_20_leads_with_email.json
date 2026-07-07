@@ -1,0 +1,103 @@
+{
+  "nodes": [
+    {
+      "node_id": "node_start",
+      "type": "start",
+      "name": "Start: First 20 Email Leads Dashboard",
+      "description": "Manually start the dashboard view for the first 20 leads with usable email addresses.",
+      "parameters": {},
+      "position": { "x": 0, "y": 340 },
+      "is_disabled": false
+    },
+    {
+      "node_id": "node_fetch_leads",
+      "type": "database",
+      "name": "Fetch First 20 Leads With Email",
+      "description": "Read the first 20 leads that have a usable email address.",
+      "parameters": {
+        "query": "SELECT id::text AS id, company_name, BTRIM(email) AS email FROM leads WHERE email IS NOT NULL AND BTRIM(email) <> '' AND LOWER(BTRIM(email)) NOT IN ('n/a', 'na', 'none', 'null', 'unknown', '-') AND POSITION('@' IN BTRIM(email)) > 1 ORDER BY company_name ASC, created_at ASC LIMIT 20",
+        "read_only": true,
+        "limit": 20
+      },
+      "position": { "x": 320, "y": 340 },
+      "is_disabled": false
+    },
+    {
+      "node_id": "node_prepare_dashboard",
+      "type": "script",
+      "name": "Prepare Dashboard Data",
+      "description": "Prepare a safe payload for the html_page dashboard.",
+      "parameters": {
+        "language": "javascript",
+        "script": "module.exports = async function({ input }) {\n  const rows = Array.isArray(input && input.rows) ? input.rows : [];\n  const safeRows = rows.map((row, index) => ({\n    rank: index + 1,\n    id: row && row.id != null ? String(row.id).trim() : '',\n    company_name: row && row.company_name != null ? String(row.company_name).trim() : '',\n    email: row && row.email != null ? String(row.email).trim() : ''\n  }));\n  return {\n    rows: safeRows,\n    count: safeRows.length,\n    dashboard_title: 'Dee Empire - First 20 Leads With Email',\n    generated_at: new Date().toISOString()\n  };\n};"
+      },
+      "position": { "x": 660, "y": 340 },
+      "is_disabled": false
+    },
+    {
+      "node_id": "node_html_dashboard",
+      "type": "html_page",
+      "name": "Show Leads In Dashboard",
+      "description": "Render the first 20 leads with email directly inside the Crowpus dashboard.",
+      "parameters": {
+        "title": "Dee Empire - First 20 Leads With Email",
+        "purpose": "Display the first 20 leads with usable email addresses inside the dashboard. Review the list, then close the page to continue.",
+        "close_label": "Close Dashboard",
+        "html": "<!doctype html><html><head><meta charset=\"utf-8\"><meta name=\"viewport\" content=\"width=device-width, initial-scale=1\"><title>Dee Empire Leads Dashboard</title><style>:root{--bg:#f7f5f0;--panel:#ffffff;--ink:#111111;--muted:#6b7280;--line:#e8e1d0;--gold:#d4af37;--gold-dark:#9c7a1f;--shadow:0 18px 60px rgba(0,0,0,.08)}*{box-sizing:border-box}body{margin:0;background:radial-gradient(circle at top,#f3ecd8 0%,#f7f5f0 38%,#efe7d2 100%);font-family:Arial,Helvetica,sans-serif;color:var(--ink)}.wrap{max-width:1180px;margin:24px auto;padding:0 18px 28px}.hero{background:#0a0a0a;color:#fff;border-radius:22px 22px 0 0;padding:28px 30px}.brand{color:var(--gold);font-size:28px;font-weight:700;letter-spacing:1.5px}.sub{margin-top:10px;color:#d1d5db;font-size:15px;line-height:1.6}.panel{background:var(--panel);border:1px solid var(--line);border-top:0;border-radius:0 0 22px 22px;padding:28px;box-shadow:var(--shadow)}.stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px;margin-bottom:22px}.stat{background:#fbf7ec;border:1px solid var(--line);border-radius:16px;padding:16px 18px}.stat-label{font-size:12px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--gold-dark)}.stat-value{margin-top:8px;font-size:26px;font-weight:700;color:#111}.table-shell{overflow:auto;border:1px solid var(--line);border-radius:18px;background:#fff}.table{width:100%;border-collapse:collapse;min-width:760px}.table thead th{background:#111;color:#f8f1d7;padding:14px 16px;text-align:left;font-size:13px;letter-spacing:.05em;text-transform:uppercase}.table tbody td{padding:15px 16px;border-top:1px solid var(--line);vertical-align:top}.table tbody tr:nth-child(even){background:#fcfaf4}.mono{font-family:Consolas,Monaco,monospace;font-size:12px}.company{font-weight:700}.email a{color:var(--gold-dark);text-decoration:none}.email a:hover{text-decoration:underline}.empty{padding:42px 22px;text-align:center;color:var(--muted)}.foot{margin-top:18px;color:var(--muted);font-size:13px;line-height:1.5}.badge{display:inline-block;background:#fbf7ec;color:#5b4a18;border:1px solid #e8d7a3;border-radius:999px;padding:6px 12px;font-size:12px;font-weight:700}.topbar{display:flex;justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap;margin-bottom:18px}@media (max-width:760px){.stats{grid-template-columns:1fr}.wrap{margin:16px auto}.hero,.panel{padding:20px}.brand{font-size:23px}}</style></head><body><div class=\"wrap\"><div class=\"hero\"><div class=\"brand\">DEE EMPIRE</div><div class=\"sub\">First 20 leads with usable email addresses, rendered directly inside your workflow dashboard.</div></div><div class=\"panel\"><div class=\"topbar\"><div class=\"badge\" id=\"snapshot-badge\">Loading snapshot...</div></div><div class=\"stats\"><div class=\"stat\"><div class=\"stat-label\">Lead Count</div><div class=\"stat-value\" id=\"lead-count\">0</div></div><div class=\"stat\"><div class=\"stat-label\">First Company</div><div class=\"stat-value\" id=\"first-company\">-</div></div><div class=\"stat\"><div class=\"stat-label\">Generated At</div><div class=\"stat-value\" id=\"generated-at\" style=\"font-size:15px;line-height:1.5\">-</div></div></div><div class=\"table-shell\"><table class=\"table\"><thead><tr><th style=\"width:72px\">#</th><th style=\"width:180px\">Lead ID</th><th>Company</th><th style=\"width:320px\">Email</th></tr></thead><tbody id=\"lead-table-body\"></tbody></table><div class=\"empty\" id=\"empty-state\" hidden>No leads with usable email addresses were found in this first-20 dashboard view.</div></div><div class=\"foot\">This dashboard is read-only. No emails are sent to leads, no database records are changed, and the workflow continues when you close this page.</div></div></div><script>const input=window.workflowInput||{};const rows=Array.isArray(input.rows)?input.rows:[];const count=typeof input.count==='number'?input.count:rows.length;const generatedAt=input.generated_at||'';const body=document.getElementById('lead-table-body');const emptyState=document.getElementById('empty-state');document.getElementById('lead-count').textContent=String(count);document.getElementById('first-company').textContent=rows[0]&&rows[0].company_name?rows[0].company_name:'-';document.getElementById('generated-at').textContent=generatedAt||'-';document.getElementById('snapshot-badge').textContent=count+' lead'+(count===1?'':'s')+' in dashboard snapshot';if(rows.length===0){emptyState.hidden=false;}else{body.innerHTML=rows.map((row)=>'<tr><td>'+String(row.rank||'')+'</td><td class=\"mono\">'+String(row.id||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')+'</td><td class=\"company\">'+String(row.company_name||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')+'</td><td class=\"email\"><a href=\"mailto:'+String(row.email||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')+'\">'+String(row.email||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')+'</a></td></tr>').join('');}window.workflowOutput={status:'dashboard_viewed',lead_count:count,generated_at:generatedAt};</script></body></html>"
+      },
+      "position": { "x": 1000, "y": 340 },
+      "is_disabled": false
+    },
+    {
+      "node_id": "node_done",
+      "type": "set",
+      "name": "Done: Dashboard Closed",
+      "description": "Return a stable summary after the lead dashboard is viewed.",
+      "parameters": {
+        "fields": [
+          { "name": "status", "value": "viewed" },
+          { "name": "lead_count", "value": "{{node_prepare_dashboard.count}}" },
+          { "name": "generated_at", "value": "{{node_prepare_dashboard.generated_at}}" },
+          { "name": "dashboard_title", "value": "{{node_prepare_dashboard.dashboard_title}}" }
+        ]
+      },
+      "position": { "x": 1340, "y": 340 },
+      "is_disabled": false
+    },
+    {
+      "node_id": "note_overview",
+      "type": "note",
+      "name": "Operator Guide",
+      "description": "",
+      "parameters": {
+        "noteText": "FIRST 20 EMAIL LEADS DASHBOARD\n\nPurpose:\nRead the first 20 leads with a usable email address and render them inside the workflow dashboard.\n\nIncluded fields:\n- Lead ID\n- Company name\n- Email\n\nSafety:\n- Database query is read-only.\n- No email is sent to leads.\n- No database data is changed.\n- The dashboard is view-only.\n\nRequirements:\n- The leads table must exist.\n- The html_page node must be available."
+      },
+      "position": { "x": 120, "y": -90 },
+      "is_disabled": false
+    }
+  ],
+  "connections": [
+    { "source_node_id": "node_start", "target_node_id": "node_fetch_leads", "source_handle": "output", "target_handle": "input" },
+    { "source_node_id": "node_fetch_leads", "target_node_id": "node_prepare_dashboard", "source_handle": "output", "target_handle": "input" },
+    { "source_node_id": "node_prepare_dashboard", "target_node_id": "node_html_dashboard", "source_handle": "output", "target_handle": "input" },
+    { "source_node_id": "node_html_dashboard", "target_node_id": "node_done", "source_handle": "output", "target_handle": "input" }
+  ],
+  "groups": [
+    {
+      "name": "Phase 1 - Query And Shape Leads",
+      "description": "Read the first 20 leads with email and prepare safe dashboard data.",
+      "color": "#3b82f6",
+      "position": { "x": -40, "y": 250 },
+      "size": { "width": 900, "height": 260 },
+      "node_ids": ["node_start", "node_fetch_leads", "node_prepare_dashboard"]
+    },
+    {
+      "name": "Phase 2 - Render Dashboard",
+      "description": "Show the lead snapshot in html_page and return a stable summary after viewing.",
+      "color": "#22c55e",
+      "position": { "x": 920, "y": 250 },
+      "size": { "width": 620, "height": 260 },
+      "node_ids": ["node_html_dashboard", "node_done"]
+    }
+  ]
+}

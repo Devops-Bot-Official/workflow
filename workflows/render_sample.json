@@ -1,0 +1,169 @@
+{
+  "nodes": [
+    {
+      "node_id": "f1a8beb1-7775-4086-831e-3d460f2da3b2",
+      "type": "start",
+      "name": "START — document_id",
+      "description": "",
+      "parameters": {},
+      "position": {
+        "x": 0,
+        "y": 0
+      },
+      "is_disabled": false
+    },
+    {
+      "node_id": "17073e4f-9d6f-448c-bb93-23e30049bba2",
+      "type": "database",
+      "name": "Fetch document data + build HTML vars",
+      "description": "",
+      "parameters": {
+        "query": "\nWITH doc AS (\n  SELECT d.*, EXTRACT(YEAR FROM d.created_at)::int AS yr\n  FROM documents d WHERE d.id = '{{document_id}}'::uuid\n),\nclient AS (\n  SELECT\n    COALESCE(c.company_name,c.full_name,l.company_name,l.full_name,'Unbekannter Auftraggeber') AS company,\n    COALESCE(c.contact_name,c.full_name,l.contact_name,l.full_name,'') AS contact,\n    COALESCE(c.street,c.address_street,l.street,l.address,'') AS street,\n    COALESCE(c.zip,c.postal_code,l.zip,l.postal_code,'') AS zip,\n    COALESCE(c.city,l.city,'') AS city, COALESCE(c.country,l.country,'Deutschland') AS country\n  FROM doc LEFT JOIN customers c ON c.id=doc.customer_id LEFT JOIN leads l ON l.id=doc.lead_id\n)\nSELECT\n  doc.document_number,\n  'contracts/'||doc.yr||'/'||doc.document_number||'.pdf' AS storage_object_name,\n  TO_CHAR(doc.created_at,'DD.MM.YYYY') AS contract_date,\n  COALESCE(doc.tags->>'start_date', TO_CHAR(doc.created_at,'DD.MM.YYYY')) AS start_date,\n  COALESCE(doc.tags->>'minimum_term','12') AS minimum_term,\n  client.company AS client_company_name, client.contact AS client_contact_name,\n  client.street AS client_street, client.zip AS client_zip,\n  client.city AS client_city, client.country AS client_country,\n  COALESCE(doc.tags->>'services_description', doc.title, 'Dienstleistungen gem&auml;&szlig; Angebot') AS services_description,\n  COALESCE(doc.tags->>'monthly_fee','0,00') AS monthly_fee,\n  COALESCE(doc.tags->>'payment_terms','14') AS payment_terms,\n  CASE WHEN doc.notes IS NOT NULL AND TRIM(doc.notes)!=''\n    THEN '<div style=\"margin-bottom:6mm\"><div class=\"slbl\">Zus&auml;tzliche Vereinbarungen</div><p>'||doc.notes||'</p></div>'\n    ELSE '' END AS notes_html\nFROM doc, client;"
+      },
+      "position": {
+        "x": 200,
+        "y": 0
+      },
+      "is_disabled": false
+    },
+    {
+      "node_id": "6e097969-38bd-4ec3-869a-7d9a272abcf7",
+      "type": "pdf_render",
+      "name": "Render PDF (Chromium A4)",
+      "description": "",
+      "parameters": {
+        "html": "<!DOCTYPE html><html lang=\"de\"><head><meta charset=\"UTF-8\">\n<style>\n* { margin:0; padding:0; box-sizing:border-box; }\nbody { font-family:Arial,Helvetica,sans-serif; font-size:10pt; color:#1a1a1a; }\n.page { width:210mm; padding:18mm 20mm 28mm 20mm; }\n.hdr  { display:flex; justify-content:space-between; align-items:flex-start;\n        padding-bottom:5mm; border-bottom:2px solid #1a1a1a; margin-bottom:8mm; }\n.logo img { max-height:44px; max-width:160px; }\n.co  { text-align:right; font-size:8pt; color:#555; line-height:1.65; }\n.co strong { display:block; font-size:10.5pt; color:#1a1a1a; margin-bottom:1mm; }\n.meta-row { display:flex; justify-content:space-between; margin-bottom:9mm; }\n.adr { font-size:9pt; line-height:1.75; }\n.adr-lbl { font-size:7pt; text-transform:uppercase; letter-spacing:1px; color:#aaa; margin-bottom:1.5mm; }\n.doc-title { font-size:22pt; font-weight:bold; color:#1a1a1a; margin-bottom:8mm; }\ntable.t { width:100%; border-collapse:collapse; margin-bottom:6mm; font-size:9pt; }\ntable.t thead tr { background:#f5f5f5; }\ntable.t th { padding:2.5mm 3.5mm; font-size:7.5pt; text-transform:uppercase; color:#777;\n             font-weight:bold; border-bottom:1.5px solid #ccc; text-align:left; }\ntable.t th.r, table.t td.r { text-align:right; }\ntable.t tbody tr { border-bottom:1px solid #f0f0f0; }\ntable.t td { padding:3mm 3.5mm; vertical-align:top; }\n.totals-wrap { display:flex; justify-content:flex-end; margin-bottom:8mm; }\n.totals { min-width:70mm; font-size:9pt; }\n.trow { display:flex; justify-content:space-between; padding:1.5mm 0; }\n.trow.sep { border-top:1px solid #ddd; margin-top:1.5mm; padding-top:2.5mm; }\n.trow.bold { font-weight:bold; font-size:11pt; border-top:2px solid #1a1a1a;\n             margin-top:2mm; padding-top:2.5mm; }\n.slbl { font-size:7.5pt; font-weight:bold; text-transform:uppercase; letter-spacing:0.5px;\n        color:#aaa; margin:6mm 0 2mm; }\n.pbox { background:#f8f8f8; border-left:3px solid #ddd; padding:4mm 5mm;\n        font-size:9pt; line-height:1.8; margin-bottom:6mm; }\n.clause { margin-bottom:5mm; }\n.ctitle { font-size:9.5pt; font-weight:bold; margin-bottom:2mm; }\np { font-size:9pt; line-height:1.65; color:#333; margin-bottom:3mm; }\n.sig-row { display:flex; gap:16mm; margin-top:14mm; }\n.sig { flex:1; padding-top:2mm; border-top:1px solid #bbb; font-size:8pt; color:#777; }\n.footer { position:fixed; bottom:10mm; left:20mm; right:20mm; border-top:1px solid #ddd;\n          padding-top:2.5mm; display:flex; justify-content:space-between;\n          font-size:6.5pt; color:#bbb; }</style></head><body><div class=\"page\">\n  <div class=\"hdr\">\n    <div class=\"logo\"><img src=\"https://storage.googleapis.com/dee-empire-artifacts/dee-empire.PNG\" alt=\"Dee Empire\"></div>\n    <div class=\"co\">\n      <strong>Dee Empire</strong>\n      Forststra&szlig;e 6 &middot; 96264 Altenkunstadt<br>\n      admin@dee-empire.com &middot; 09572 8744 123<br>\n      dee-empire.com\n    </div>\n  </div>\n  <div class=\"meta-row\">\n    <div class=\"adr\">\n      <div class=\"adr-lbl\">Auftragnehmer</div>\n      <strong>Dee Empire</strong><br>\n      Mohamed Sesay<br>Forststra&szlig;e 6<br>96264 Altenkunstadt\n    </div>\n    <div class=\"adr\" style=\"text-align:right\">\n      <div class=\"adr-lbl\">Vertragsdaten</div>\n      Vertragsnr.: <strong>{{document_number}}</strong><br>\n      Datum: {{contract_date}}<br>\n      Laufzeit ab: {{start_date}}<br>\n      Mindestlaufzeit: {{minimum_term}} Monate\n    </div>\n  </div>\n  <div class=\"adr-lbl\" style=\"margin-bottom:1.5mm\">Auftraggeber</div>\n  <p style=\"margin-bottom:7mm\"><strong>{{client_company_name}}</strong>, vertreten durch {{client_contact_name}},\n  {{client_street}}, {{client_zip}} {{client_city}}, {{client_country}}</p>\n  <div class=\"doc-title\">Dienstleistungsvertrag</div>\n  <div class=\"clause\"><div class=\"ctitle\">&#167;&nbsp;1 Vertragsgegenstand</div>\n    <p>{{services_description}}</p></div>\n  <div class=\"clause\"><div class=\"ctitle\">&#167;&nbsp;2 Verg&uuml;tung und Zahlung</div>\n    <p>Die monatliche Verg&uuml;tung betr&auml;gt <strong>{{monthly_fee}} EUR</strong> (netto) zzgl.\n    gesetzlicher Mehrwertsteuer. Die Rechnung wird monatlich im Voraus gestellt.\n    Zahlungsziel: <strong>{{payment_terms}} Tage</strong> nach Rechnungsdatum.</p>\n    <p>Bankverbindung: IBAN DE71&nbsp;7706&nbsp;1040&nbsp;0002&nbsp;3637&nbsp;3 &middot; BIC GENODEF1ALK</p></div>\n  <div class=\"clause\"><div class=\"ctitle\">&#167;&nbsp;3 Vertragslaufzeit und K&uuml;ndigung</div>\n    <p>Der Vertrag beginnt am <strong>{{start_date}}</strong> und hat eine Mindestlaufzeit von\n    <strong>{{minimum_term}} Monaten</strong>. Nach Ablauf verl&auml;ngert er sich automatisch um je einen Monat,\n    sofern er nicht mit einer Frist von 30 Tagen zum Monatsende schriftlich gek&uuml;ndigt wird.</p></div>\n  <div class=\"clause\"><div class=\"ctitle\">&#167;&nbsp;4 Datenschutz und Vertraulichkeit</div>\n    <p>Beide Parteien verpflichten sich, vertrauliche Informationen nicht an Dritte weiterzugeben.\n    Die Verarbeitung personenbezogener Daten erfolgt gem&auml;&szlig; DSGVO.</p></div>\n  <div class=\"clause\"><div class=\"ctitle\">&#167;&nbsp;5 Haftung</div>\n    <p>Die Haftung des Auftragnehmers ist auf Vorsatz und grobe Fahrl&auml;ssigkeit beschr&auml;nkt.\n    Eine Haftung f&uuml;r mittelbare Sch&auml;den oder entgangenen Gewinn ist ausgeschlossen,\n    soweit gesetzlich zul&auml;ssig.</p></div>\n  <div class=\"clause\"><div class=\"ctitle\">&#167;&nbsp;6 Anwendbares Recht und Gerichtsstand</div>\n    <p>Es gilt deutsches Recht. Gerichtsstand ist Lichtenfels (Bayern), sofern der Auftraggeber Kaufmann ist.</p></div>\n  {{notes_html}}\n  <div class=\"sig-row\" style=\"margin-top:14mm;\">\n    <div class=\"sig\"><div style=\"margin-bottom:10mm;color:#ccc;font-size:8pt;\">Ort, Datum</div>\n      Dee Empire &middot; Mohamed Sesay</div>\n    <div class=\"sig\"><div style=\"margin-bottom:10mm;color:#ccc;font-size:8pt;\">Ort, Datum</div>\n      {{client_company_name}} &middot; {{client_contact_name}}</div>\n  </div>\n  <div class=\"footer\">\n    <span>Dee Empire &middot; Forststra&szlig;e 6 &middot; 96264 Altenkunstadt</span>\n    <span>St.-Nr.: 230/274/01007 &middot; USt-IdNr.: DE455289768</span>\n    <span>IBAN: DE7177061040000236373 &middot; BIC: GENODEF1ALK</span>\n  </div></div></body></html>",
+        "margin": "10mm",
+        "filename": "{{document_number}}.pdf",
+        "page_size": "A4"
+      },
+      "position": {
+        "x": 400,
+        "y": 0
+      },
+      "is_disabled": false
+    },
+    {
+      "node_id": "69935938-1055-4212-a08c-dde7a5736ef5",
+      "type": "storage_upload",
+      "name": "Upload PDF to GCS",
+      "description": "",
+      "parameters": {
+        "body": "{{path}}",
+        "bucket": "crowpus-docs-bucket",
+        "object_name": "{{storage_object_name}}",
+        "content_type": "application/pdf"
+      },
+      "position": {
+        "x": 600,
+        "y": 0
+      },
+      "is_disabled": false
+    },
+    {
+      "node_id": "26b4067a-6dcd-4b57-a176-ba62aa988efb",
+      "type": "storage_signed_url",
+      "name": "Generate 7-day signed URL",
+      "description": "",
+      "parameters": {
+        "bucket": "crowpus-docs-bucket",
+        "method": "GET",
+        "expires_in": 604800,
+        "object_name": "{{storage_object_name}}"
+      },
+      "position": {
+        "x": 800,
+        "y": 0
+      },
+      "is_disabled": false
+    },
+    {
+      "node_id": "ebf2f619-fc1c-4ebe-bacf-a7698722124d",
+      "type": "database",
+      "name": "Update documents with file info",
+      "description": "",
+      "parameters": {
+        "query": "\nUPDATE documents\nSET\n  file_url         = '{{url}}',\n  storage_key      = '{{storage_object_name}}',\n  storage_bucket   = 'crowpus-docs-bucket',\n  storage_provider = 'gcs',\n  file_name        = '{{document_number}}.pdf',\n  file_size_bytes  = CASE WHEN NULLIF('{{bytes}}','') IS NOT NULL\n                          THEN '{{bytes}}'::bigint ELSE file_size_bytes END,\n  updated_at       = NOW()\nWHERE id = '{{document_id}}'::uuid\nRETURNING id::text AS document_id, document_number, file_url, storage_key;"
+      },
+      "position": {
+        "x": 1000,
+        "y": 0
+      },
+      "is_disabled": false
+    },
+    {
+      "node_id": "2440b4b0-4817-4755-9668-d9cf75fcc064",
+      "type": "set",
+      "name": "DONE — output",
+      "description": "",
+      "parameters": {
+        "fields": [
+          {
+            "name": "status",
+            "value": "success"
+          },
+          {
+            "name": "document_number",
+            "value": "{{document_number}}"
+          },
+          {
+            "name": "signed_url",
+            "value": "{{url}}"
+          },
+          {
+            "name": "storage_key",
+            "value": "{{storage_object_name}}"
+          },
+          {
+            "name": "next",
+            "value": "PDF is live. Use signed_url to view. Call SEND-document-for-esignature to send for signing."
+          }
+        ]
+      },
+      "position": {
+        "x": 1200,
+        "y": 0
+      },
+      "is_disabled": false
+    }
+  ],
+  "connections": [
+    {
+      "source_node_id": "f1a8beb1-7775-4086-831e-3d460f2da3b2",
+      "target_node_id": "17073e4f-9d6f-448c-bb93-23e30049bba2",
+      "source_handle": "output",
+      "target_handle": "input"
+    },
+    {
+      "source_node_id": "17073e4f-9d6f-448c-bb93-23e30049bba2",
+      "target_node_id": "6e097969-38bd-4ec3-869a-7d9a272abcf7",
+      "source_handle": "output",
+      "target_handle": "input"
+    },
+    {
+      "source_node_id": "6e097969-38bd-4ec3-869a-7d9a272abcf7",
+      "target_node_id": "69935938-1055-4212-a08c-dde7a5736ef5",
+      "source_handle": "output",
+      "target_handle": "input"
+    },
+    {
+      "source_node_id": "69935938-1055-4212-a08c-dde7a5736ef5",
+      "target_node_id": "26b4067a-6dcd-4b57-a176-ba62aa988efb",
+      "source_handle": "output",
+      "target_handle": "input"
+    },
+    {
+      "source_node_id": "26b4067a-6dcd-4b57-a176-ba62aa988efb",
+      "target_node_id": "ebf2f619-fc1c-4ebe-bacf-a7698722124d",
+      "source_handle": "output",
+      "target_handle": "input"
+    },
+    {
+      "source_node_id": "ebf2f619-fc1c-4ebe-bacf-a7698722124d",
+      "target_node_id": "2440b4b0-4817-4755-9668-d9cf75fcc064",
+      "source_handle": "output",
+      "target_handle": "input"
+    }
+  ],
+  "groups": []
+}

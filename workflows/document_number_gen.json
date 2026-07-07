@@ -1,0 +1,100 @@
+{
+  "nodes": [
+    {
+      "node_id": "86b911f1-06c7-44fc-9726-e91cf7cf8cd0",
+      "type": "start",
+      "name": "START",
+      "description": "",
+      "parameters": {},
+      "position": {
+        "x": 0,
+        "y": 0
+      },
+      "is_disabled": false
+    },
+    {
+      "node_id": "2ab2e7f1-148a-49b2-b77f-d12f523741d7",
+      "type": "database",
+      "name": "Increment + return next document number",
+      "description": "",
+      "parameters": {
+        "query": "\nUPDATE document_sequences\nSET\n  last_number = last_number + 1,\n  updated_at  = NOW()\nWHERE document_type = '{{document_type}}'\n  AND year = EXTRACT(YEAR FROM NOW())::int\nRETURNING\n  document_type,\n  prefix,\n  year,\n  last_number,\n  prefix || '-' || year::text || '-' || LPAD(last_number::text, 3, '0') AS document_number;"
+      },
+      "position": {
+        "x": 200,
+        "y": 0
+      },
+      "is_disabled": false
+    },
+    {
+      "node_id": "cc967637-414e-4111-afec-5f85670135e9",
+      "type": "set",
+      "name": "DONE",
+      "description": "",
+      "parameters": {
+        "fields": [
+          {
+            "name": "status",
+            "value": "success"
+          },
+          {
+            "name": "document_number",
+            "value": "{{document_number}}"
+          },
+          {
+            "name": "document_type",
+            "value": "{{document_type}}"
+          }
+        ]
+      },
+      "position": {
+        "x": 400,
+        "y": 0
+      },
+      "is_disabled": false
+    },
+    {
+      "node_id": "80c3c469-1f8b-4a90-babd-6eb8ad4c53ab",
+      "type": "note",
+      "name": "📋 How to use",
+      "description": "",
+      "parameters": {
+        "noteText": "UTIL — Document Number Generator\n\nGenerates the next sequential document number for any document type.\n\nINPUT:\n  document_type   TEXT   One of:\n                           invoice          → DEE-INV-2026-NNN\n                           proposal         → DEE-PRO-2026-NNN\n                           contract         → DEE-CON-2026-NNN\n                           nda              → DEE-NDA-2026-NNN\n                           onboarding       → DEE-ONB-2026-NNN\n                           report           → DEE-RPT-2026-NNN\n                           quote            → DEE-QUO-2026-NNN\n                           receipt          → DEE-REC-2026-NNN\n                           team_onboarding  → DEE-EMP-2026-NNN\n\nOUTPUT (from RETURNING clause):\n  document_type    invoice\n  prefix           DEE-INV\n  year             2026\n  last_number      1\n  document_number  DEE-INV-2026-001   ← use this\n\nHOW IT WORKS:\n  Single atomic UPDATE + RETURNING on document_sequences.\n  Increments last_number and returns the new formatted number\n  in one database round-trip. Concurrent-safe — no two workflow\n  executions can receive the same number.\n\nCALLED BY:\n  GENERATE-invoice    → document_type = \"invoice\"\n  GENERATE-proposal   → document_type = \"proposal\"\n  GENERATE-contract   → document_type = \"contract\"\n  GENERATE-nda        → document_type = \"nda\"\n\nYEAR ROLLOVER:\n  The WHERE clause uses EXTRACT(YEAR FROM NOW()) so it automatically\n  uses the correct year row. On Jan 1 a new row must exist for the\n  new year — handled by the year-end archive workflow."
+      },
+      "position": {
+        "x": -20,
+        "y": 120
+      },
+      "is_disabled": false
+    },
+    {
+      "node_id": "3d9446a3-be74-4ffe-8373-8241185a4716",
+      "type": "note",
+      "name": "🔢 Number format",
+      "description": "",
+      "parameters": {
+        "noteText": "Document number format:\n  {PREFIX}-{YEAR}-{NNN}\n\n  NNN = zero-padded to 3 digits (LPAD 3).\n  Upgrades to 4 digits automatically once NNN > 999\n  (LPAD only pads — does not truncate).\n\nExamples:\n  DEE-INV-2026-001   first invoice of 2026\n  DEE-INV-2026-042   42nd invoice of 2026\n  DEE-PRO-2026-007   7th proposal of 2026\n  DEE-CON-2026-003   3rd contract of 2026\n  DEE-NDA-2026-001   first NDA of 2026\n\nStorage path (GCS) convention:\n  invoices/2026/DEE-INV-2026-001.pdf\n  proposals/2026/DEE-PRO-2026-007.pdf\n  contracts/2026/DEE-CON-2026-003.pdf\n\nThe generation pipelines use document_number as both:\n  1. The documents.document_number value (DB record)\n  2. The PDF filename (storage_key)"
+      },
+      "position": {
+        "x": 440,
+        "y": 200
+      },
+      "is_disabled": false
+    }
+  ],
+  "connections": [
+    {
+      "source_node_id": "86b911f1-06c7-44fc-9726-e91cf7cf8cd0",
+      "target_node_id": "2ab2e7f1-148a-49b2-b77f-d12f523741d7",
+      "source_handle": "output",
+      "target_handle": "input"
+    },
+    {
+      "source_node_id": "2ab2e7f1-148a-49b2-b77f-d12f523741d7",
+      "target_node_id": "cc967637-414e-4111-afec-5f85670135e9",
+      "source_handle": "output",
+      "target_handle": "input"
+    }
+  ],
+  "groups": []
+}

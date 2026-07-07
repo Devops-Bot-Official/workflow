@@ -1,0 +1,270 @@
+{
+  "nodes": [
+    {
+      "node_id": "trigger",
+      "type": "start",
+      "name": "START",
+      "description": "",
+      "parameters": {},
+      "position": {
+        "x": 100,
+        "y": 350
+      },
+      "is_disabled": false
+    },
+    {
+      "node_id": "crm",
+      "type": "database",
+      "name": "1. CREATE CRM Tables",
+      "description": "",
+      "parameters": {
+        "query": "\nCREATE TABLE IF NOT EXISTS leads (id UUID PRIMARY KEY DEFAULT gen_random_uuid(),company_name VARCHAR(255) NOT NULL,contact_name VARCHAR(255),email VARCHAR(255),phone VARCHAR(50),industry VARCHAR(50),city VARCHAR(100),country VARCHAR(100) DEFAULT 'Deutschland',website_url VARCHAR(500),linkedin_url VARCHAR(500),instagram_url VARCHAR(500),facebook_url VARCHAR(500),employee_count INTEGER,lead_source VARCHAR(50),status VARCHAR(50) DEFAULT 'new',preferred_language VARCHAR(10) DEFAULT 'de',company_id UUID,notes TEXT,created_at TIMESTAMPTZ DEFAULT NOW(),updated_at TIMESTAMPTZ DEFAULT NOW());\nCREATE TABLE IF NOT EXISTS customers (id UUID PRIMARY KEY DEFAULT gen_random_uuid(),lead_id UUID,company_name VARCHAR(255) NOT NULL,contact_name VARCHAR(255),email VARCHAR(255),phone VARCHAR(50),services_purchased JSONB DEFAULT '[]',monthly_revenue DECIMAL(10,2) DEFAULT 0,setup_fee_paid DECIMAL(10,2) DEFAULT 0,start_date DATE,renewal_date DATE,contract_status VARCHAR(20) DEFAULT 'active',health_score VARCHAR(10) DEFAULT 'green',preferred_language VARCHAR(10) DEFAULT 'de',invoice_language VARCHAR(10) DEFAULT 'de',account_manager VARCHAR(255),company_id UUID,notes TEXT,created_at TIMESTAMPTZ DEFAULT NOW(),updated_at TIMESTAMPTZ DEFAULT NOW());\nCREATE TABLE IF NOT EXISTS opportunities (id UUID PRIMARY KEY DEFAULT gen_random_uuid(),lead_id UUID,problem_identified TEXT,service_type VARCHAR(50),potential_monthly_revenue DECIMAL(10,2),priority VARCHAR(20) DEFAULT 'medium',status VARCHAR(50) DEFAULT 'open',communication_language VARCHAR(10) DEFAULT 'de',company_id UUID,notes TEXT,created_at TIMESTAMPTZ DEFAULT NOW(),updated_at TIMESTAMPTZ DEFAULT NOW());\nCREATE TABLE IF NOT EXISTS communications (id UUID PRIMARY KEY DEFAULT gen_random_uuid(),lead_id UUID,customer_id UUID,contact_name VARCHAR(255),type VARCHAR(50),direction VARCHAR(20),language_used VARCHAR(10),template_key VARCHAR(100),summary TEXT,next_action TEXT,follow_up_date DATE,company_id UUID,communicated_at TIMESTAMPTZ DEFAULT NOW(),created_at TIMESTAMPTZ DEFAULT NOW());\nCREATE TABLE IF NOT EXISTS proposals (id UUID PRIMARY KEY DEFAULT gen_random_uuid(),lead_id UUID,proposal_date DATE DEFAULT CURRENT_DATE,services_offered JSONB DEFAULT '[]',document_language VARCHAR(10) DEFAULT 'de',setup_fee DECIMAL(10,2) DEFAULT 0,monthly_fee DECIMAL(10,2) DEFAULT 0,status VARCHAR(50) DEFAULT 'draft',contract_signed BOOLEAN DEFAULT FALSE,legal_jurisdiction VARCHAR(20) DEFAULT 'DE',company_id UUID,notes TEXT,created_at TIMESTAMPTZ DEFAULT NOW(),updated_at TIMESTAMPTZ DEFAULT NOW());\nCREATE TABLE IF NOT EXISTS financial_tracking (id UUID PRIMARY KEY DEFAULT gen_random_uuid(),month DATE NOT NULL UNIQUE,new_customers INTEGER DEFAULT 0,churned_customers INTEGER DEFAULT 0,new_mrr_added DECIMAL(10,2) DEFAULT 0,mrr_lost DECIMAL(10,2) DEFAULT 0,total_mrr DECIMAL(10,2) DEFAULT 0,setup_fees_collected DECIMAL(10,2) DEFAULT 0,total_revenue DECIMAL(10,2) DEFAULT 0,expenses DECIMAL(10,2) DEFAULT 0,net_profit DECIMAL(10,2) DEFAULT 0,company_id UUID,created_at TIMESTAMPTZ DEFAULT NOW(),updated_at TIMESTAMPTZ DEFAULT NOW());"
+      },
+      "position": {
+        "x": 400,
+        "y": 350
+      },
+      "is_disabled": false
+    },
+    {
+      "node_id": "support",
+      "type": "database",
+      "name": "2. CREATE Support Tables",
+      "description": "",
+      "parameters": {
+        "query": "\nCREATE TABLE IF NOT EXISTS i18n_translations (id UUID PRIMARY KEY DEFAULT gen_random_uuid(),key VARCHAR(100) NOT NULL,category VARCHAR(50) NOT NULL,lang_de TEXT,lang_en TEXT,lang_tr TEXT,lang_ar TEXT,lang_fr TEXT,lang_pl TEXT,created_at TIMESTAMPTZ DEFAULT NOW(),UNIQUE(key,category));\nCREATE TABLE IF NOT EXISTS message_templates (id UUID PRIMARY KEY DEFAULT gen_random_uuid(),template_key VARCHAR(100) NOT NULL,language VARCHAR(10) NOT NULL,channel VARCHAR(20) NOT NULL,subject TEXT,body TEXT NOT NULL,variables JSONB DEFAULT '[]',is_active BOOLEAN DEFAULT TRUE,created_at TIMESTAMPTZ DEFAULT NOW(),updated_at TIMESTAMPTZ DEFAULT NOW(),UNIQUE(template_key,language,channel));\nCREATE TABLE IF NOT EXISTS services (id UUID PRIMARY KEY DEFAULT gen_random_uuid(),service_key VARCHAR(50) NOT NULL UNIQUE,name_de VARCHAR(255),name_en VARCHAR(255),name_tr VARCHAR(255),name_ar VARCHAR(255),description_de TEXT,description_en TEXT,is_active BOOLEAN DEFAULT TRUE,created_at TIMESTAMPTZ DEFAULT NOW());\nCREATE TABLE IF NOT EXISTS service_packages (id UUID PRIMARY KEY DEFAULT gen_random_uuid(),service_key VARCHAR(50) NOT NULL,package_name_de VARCHAR(255),package_name_en VARCHAR(255),setup_fee_min DECIMAL(10,2),setup_fee_max DECIMAL(10,2),monthly_fee_min DECIMAL(10,2),monthly_fee_max DECIMAL(10,2),target_client_de TEXT,target_client_en TEXT,is_active BOOLEAN DEFAULT TRUE,sort_order INTEGER DEFAULT 0,created_at TIMESTAMPTZ DEFAULT NOW());"
+      },
+      "position": {
+        "x": 700,
+        "y": 350
+      },
+      "is_disabled": false
+    },
+    {
+      "node_id": "company",
+      "type": "database",
+      "name": "3. CREATE Companies + Seed Dee Empire",
+      "description": "",
+      "parameters": {
+        "query": "\nCREATE TABLE IF NOT EXISTS companies (id UUID PRIMARY KEY DEFAULT gen_random_uuid(),name VARCHAR(255) NOT NULL,legal_name VARCHAR(255),registration_number VARCHAR(100),tax_number VARCHAR(100),vat_id VARCHAR(50),iban VARCHAR(50),bic VARCHAR(20),company_type VARCHAR(20) DEFAULT 'own',country VARCHAR(100) DEFAULT 'Deutschland',state VARCHAR(100),city VARCHAR(100),zip_code VARCHAR(20),address_line1 VARCHAR(255),address_line2 VARCHAR(255),phone VARCHAR(50),email VARCHAR(255),website VARCHAR(500),industry VARCHAR(50),preferred_language VARCHAR(10) DEFAULT 'de',invoice_language VARCHAR(10) DEFAULT 'de',currency VARCHAR(10) DEFAULT 'EUR',is_active BOOLEAN DEFAULT TRUE,notes TEXT,created_at TIMESTAMPTZ DEFAULT NOW(),updated_at TIMESTAMPTZ DEFAULT NOW());\nDELETE FROM companies WHERE name = 'Dee Empire';\nINSERT INTO companies (name,legal_name,tax_number,vat_id,iban,bic,company_type,country,city,zip_code,address_line1,phone,email,website,preferred_language,invoice_language,currency,industry,is_active) VALUES ('Dee Empire','Dee Empire','230/274/01007','DE455289768','DE7177061040000236373','GENODEF1ALK','own','Deutschland','Altenkunstadt','96264','Forststraße 6','09572 8744 123','admin@dee-empire.com','https://dee-empire.com','de','de','EUR','tech',true);"
+      },
+      "position": {
+        "x": 1000,
+        "y": 350
+      },
+      "is_disabled": false
+    },
+    {
+      "node_id": "docs",
+      "type": "database",
+      "name": "4. CREATE Document System",
+      "description": "",
+      "parameters": {
+        "query": "\nCREATE TABLE IF NOT EXISTS document_sequences (id UUID PRIMARY KEY DEFAULT gen_random_uuid(),document_type VARCHAR(50) NOT NULL,prefix VARCHAR(20) NOT NULL,year INTEGER NOT NULL,last_number INTEGER DEFAULT 0,created_at TIMESTAMPTZ DEFAULT NOW(),updated_at TIMESTAMPTZ DEFAULT NOW(),UNIQUE(document_type,year));\nINSERT INTO document_sequences (document_type,prefix,year,last_number) VALUES ('invoice','DEE-INV',2026,0),('proposal','DEE-PRO',2026,0),('contract','DEE-CON',2026,0),('nda','DEE-NDA',2026,0),('report','DEE-RPT',2026,0),('onboarding','DEE-ONB',2026,0),('quote','DEE-QUO',2026,0),('receipt','DEE-REC',2026,0) ON CONFLICT (document_type,year) DO NOTHING;\nCREATE TABLE IF NOT EXISTS documents (id UUID PRIMARY KEY DEFAULT gen_random_uuid(),document_number VARCHAR(50) NOT NULL UNIQUE,document_type VARCHAR(50) NOT NULL,file_format VARCHAR(20) NOT NULL DEFAULT 'pdf',title VARCHAR(255) NOT NULL,version INTEGER DEFAULT 1,status VARCHAR(50) DEFAULT 'draft',language VARCHAR(10) DEFAULT 'de',company_id UUID,lead_id UUID,customer_id UUID,file_url TEXT,file_name VARCHAR(255),file_size_bytes BIGINT,mime_type VARCHAR(100) DEFAULT 'application/pdf',storage_provider VARCHAR(50),storage_bucket VARCHAR(255),storage_key TEXT,amount_net DECIMAL(10,2),amount_tax DECIMAL(10,2),amount_gross DECIMAL(10,2),currency VARCHAR(10) DEFAULT 'EUR',tax_rate DECIMAL(5,2) DEFAULT 19.00,generated_by VARCHAR(100),sent_at TIMESTAMPTZ,signed_at TIMESTAMPTZ,expires_at TIMESTAMPTZ,archived_at TIMESTAMPTZ,tags JSONB DEFAULT '[]',notes TEXT,created_at TIMESTAMPTZ DEFAULT NOW(),updated_at TIMESTAMPTZ DEFAULT NOW());\nCREATE INDEX IF NOT EXISTS idx_documents_type ON documents(document_type);\nCREATE INDEX IF NOT EXISTS idx_documents_status ON documents(status);\nCREATE INDEX IF NOT EXISTS idx_documents_company ON documents(company_id);"
+      },
+      "position": {
+        "x": 1300,
+        "y": 350
+      },
+      "is_disabled": false
+    },
+    {
+      "node_id": "i18n",
+      "type": "database",
+      "name": "5. SEED i18n Translations (54 keys)",
+      "description": "",
+      "parameters": {
+        "query": "\nINSERT INTO i18n_translations (key,category,lang_de,lang_en,lang_tr,lang_ar) VALUES\n('new','status','Neu','New','Yeni','جديد'),('contacted','status','Kontaktiert','Contacted','İletişime Geçildi','تم التواصل'),('qualified','status','Qualifiziert','Qualified','Nitelendirilmiş','مؤهل'),('disqualified','status','Nicht qualifiziert','Disqualified','Elendi','غير مؤهل'),('open','status','Offen','Open','Açık','مفتوح'),('in_progress','status','In Bearbeitung','In Progress','Devam Ediyor','قيد التنفيذ'),('won','status','Gewonnen','Won','Kazanıldı','تم الفوز'),('lost','status','Verloren','Lost','Kaybedildi','خُسر'),('active','status','Aktiv','Active','Aktif','نشط'),('at_risk','status','Gefährdet','At Risk','Risk Altında','في خطر'),('churned','status','Abgesprungen','Churned','Ayrıldı','انسحب'),('draft','status','Entwurf','Draft','Taslak','مسودة'),('sent','status','Versendet','Sent','Gönderildi','تم الإرسال'),('accepted','status','Angenommen','Accepted','Kabul Edildi','تم القبول'),('rejected','status','Abgelehnt','Rejected','Reddedildi','مرفوض'),('negotiating','status','In Verhandlung','Negotiating','Müzakere','تفاوض'),\n('salon','industry','Salon / Friseur','Salon / Hair','Kuaför','صالون'),('clinic','industry','Klinik / Arztpraxis','Clinic / Medical','Klinik','عيادة'),('restaurant','industry','Restaurant','Restaurant','Restoran','مطعم'),('real_estate','industry','Immobilien','Real Estate','Emlak','عقارات'),('retail','industry','Einzelhandel','Retail','Perakende','تجزئة'),('agency','industry','Agentur','Agency','Ajans','وكالة'),('tech','industry','Technologie','Technology','Teknoloji','تقنية'),('hotel','industry','Hotel','Hotel','Otel','فندق'),('legal','industry','Anwaltskanzlei','Law Firm','Hukuk Bürosu','مكتب محاماة'),('education','industry','Bildung','Education','Eğitim','تعليم'),('logistics','industry','Logistik','Logistics','Lojistik','لوجستيات'),('other','industry','Sonstige','Other','Diğer','أخرى'),\n('website','service_type','Webseite','Website','Web Sitesi','موقع إلكتروني'),('ai_agent','service_type','KI-Agent','AI Agent','Yapay Zeka Ajanı','وكيل ذكاء اصطناعي'),('workflow','service_type','Workflow-Automatisierung','Workflow Automation','İş Akışı Otomasyonu','أتمتة سير العمل'),('app_dev','service_type','App-Entwicklung','App Development','Uygulama Geliştirme','تطوير التطبيقات'),('support_bot','service_type','Support-Bot','Support Bot','Destek Botu','بوت الدعم'),('appointments','service_type','Terminautomatisierung','Appointment Automation','Randevu Otomasyonu','أتمتة المواعيد'),('lead_gen','service_type','Lead-Generierung','Lead Generation','Müşteri Adayı Üretimi','توليد العملاء'),('devops','service_type','DevOps-Services','DevOps Services','DevOps Hizmetleri','خدمات DevOps'),('platform','service_type','CrowPus-Plattform','CrowPus Platform','CrowPus Platformu','منصة CrowPus'),\n('critical','priority','Kritisch','Critical','Kritik','حرج'),('high','priority','Hoch','High','Yüksek','عالي'),('medium','priority','Mittel','Medium','Orta','متوسط'),('low','priority','Niedrig','Low','Düşük','منخفض'),\n('manual_search','lead_source','Manuelle Suche','Manual Search','Manuel Arama','بحث يدوي'),('linkedin','lead_source','LinkedIn','LinkedIn','LinkedIn','لينكدإن'),('referral','lead_source','Empfehlung','Referral','Tavsiye','إحالة'),('inbound','lead_source','Eingehend','Inbound','Gelen','وارد'),('cold_outreach','lead_source','Kaltakquise','Cold Outreach','Soğuk İletişim','تواصل بارد'),\n('pdf','file_format','PDF-Dokument','PDF Document','PDF Belgesi','مستند PDF'),('docx','file_format','Word-Dokument','Word Document','Word Belgesi','مستند Word'),('xlsx','file_format','Excel-Tabelle','Excel Spreadsheet','Excel Tablosu','جدول Excel'),('html','file_format','HTML-Dokument','HTML Document','HTML Belgesi','مستند HTML'),('csv','file_format','CSV-Datei','CSV File','CSV Dosyası','ملف CSV'),('png','file_format','PNG-Bild','PNG Image','PNG Resmi','صورة PNG'),('jpg','file_format','JPG-Bild','JPG Image','JPG Resmi','صورة JPG'),('zip','file_format','ZIP-Archiv','ZIP Archive','ZIP Arşivi','أرشيف ZIP')\nON CONFLICT (key,category) DO NOTHING;"
+      },
+      "position": {
+        "x": 1600,
+        "y": 350
+      },
+      "is_disabled": false
+    },
+    {
+      "node_id": "services",
+      "type": "database",
+      "name": "6. SEED Services Catalog",
+      "description": "",
+      "parameters": {
+        "query": "\nINSERT INTO services (service_key,name_de,name_en,name_tr,name_ar,description_de,description_en) VALUES\n('website','Webseite-Entwicklung','Website Development','Web Sitesi Geliştirme','تطوير المواقع','Professionelle Webseiten für lokale Unternehmen.','Professional websites for local businesses.'),\n('ai_agent','KI-Agent-Entwicklung','AI Agent Development','Yapay Zeka Ajanı','تطوير وكيل الذكاء','KI-Agenten für Support und Buchung — 24/7 aktiv.','24/7 AI agents for support and booking.'),\n('workflow','Workflow-Automatisierung','Workflow Automation','İş Akışı Otomasyonu','أتمتة سير العمل','Automatisierung manueller Geschäftsprozesse.','Automation of manual business processes.'),\n('app_dev','App-Entwicklung','App Development','Uygulama Geliştirme','تطوير التطبيقات','CRM, Buchungssysteme, interne Dashboards, SaaS.','CRM systems, booking portals, dashboards, SaaS.'),\n('support_bot','Kundensupport-Bot','Customer Support Bot','Müşteri Destek Botu','بوت الدعم','WhatsApp-Bots, Chatbots und E-Mail-Automatisierung.','WhatsApp bots, chatbots, and email automation.'),\n('appointments','Terminautomatisierung','Appointment Automation','Randevu Otomasyonu','أتمتة المواعيد','24/7 Buchung, Erinnerungen und No-Show-Wiederherstellung.','24/7 booking, reminders, no-show recovery.'),\n('lead_gen','Lead-Generierung','Lead Generation','Müşteri Adayı Üretimi','توليد العملاء','Sofortige Lead-Reaktion, KI-Qualifizierung, Follow-up.','Instant response, AI qualification, follow-up sequences.'),\n('devops','DevOps-Services','DevOps Services','DevOps Hizmetleri','خدمات DevOps','CI/CD, Kubernetes, Cloud-Infrastruktur, Monitoring.','CI/CD, Kubernetes, cloud infrastructure, monitoring.'),\n('platform','CrowPus-Plattform','CrowPus Platform','CrowPus Platformu','منصة CrowPus','All-in-one: ersetzt Jira, Slack, Jenkins, Terraform, n8n.','All-in-one: replaces Jira, Slack, Jenkins, Terraform, n8n.')\nON CONFLICT (service_key) DO NOTHING;\nINSERT INTO service_packages (service_key,package_name_de,package_name_en,setup_fee_min,setup_fee_max,monthly_fee_min,monthly_fee_max,target_client_de,target_client_en,sort_order) VALUES\n('website','Basic Webseite','Basic Website',800,1500,99,149,'Salon, Restaurant, kein Website','Salon, restaurant, no website',1),\n('website','Business Webseite','Business Website',2000,4000,199,299,'KMU, Klinik, Agentur','SME, clinic, agency',2),\n('website','E-Commerce Webseite','E-Commerce Website',3000,8000,299,499,'Einzelhandel online','Retail store online',3),\n('ai_agent','Basic KI-Assistent','Basic AI Assistant',800,1500,299,299,'Kleines Unternehmen, WhatsApp','Small business, WhatsApp',1),\n('ai_agent','Business KI-Agent','Business AI Agent',2000,5000,499,499,'Wachsendes Unternehmen','Growing business',2),\n('ai_agent','Multi-Kanal KI-Agent','Multi-Channel AI Agent',5000,12000,799,799,'Mittleres Unternehmen','Medium business',3),\n('ai_agent','Enterprise KI-System','Enterprise AI System',15000,50000,1499,9999,'Großes Unternehmen','Large business',4),\n('workflow','Einzelner Workflow','Single Workflow',500,1500,99,99,'Ein Automatisierungsbedarf','One automation need',1),\n('workflow','3-Workflow-Paket','3-Workflow Bundle',1500,4000,249,249,'Mehrere Prozesse','Multiple processes',2),\n('workflow','Vollständiges Automatisierungspaket','Full Automation Package',4000,10000,499,499,'5-10 Prozesse','5-10 processes',3),\n('appointments','Basic Buchungs-Bot','Basic Booking Bot',800,1500,199,199,'Kleines Unternehmen','Small business',1),\n('appointments','Vollständiges Buchungssystem','Full Booking System',2000,4000,399,399,'SME, Beratung','SME, consulting',2),\n('appointments','Klinik Multi-Mitarbeiter','Clinic Multi-Staff',4000,8000,699,699,'Arztpraxis, Klinik','Medical practice, clinic',3),\n('lead_gen','Lead-Response-Bot','Lead Response Bot',1000,2000,299,299,'Jedes Unternehmen','Any business',1),\n('lead_gen','Vollständiges Lead-Gen-System','Full Lead Gen System',3000,6000,599,599,'Immobilien, Agenturen','Real estate, agencies',2),\n('support_bot','WhatsApp-FAQ-Bot','WhatsApp FAQ Bot',800,2000,199,199,'Viele Kundenfragen','Many customer questions',1),\n('support_bot','KI-Support-Agent','AI Support Agent',2000,5000,399,399,'Multi-Channel Support','Multi-channel support',2),\n('platform','CrowPus Starter','CrowPus Starter',0,0,499,499,'Teams 1-10','Teams 1-10',1),\n('platform','CrowPus Growth','CrowPus Growth',0,0,1999,1999,'Teams 11-50','Teams 11-50',2),\n('platform','CrowPus Enterprise','CrowPus Enterprise',0,0,4999,9999,'Teams 50+','Teams 50+',3)\nON CONFLICT DO NOTHING;"
+      },
+      "position": {
+        "x": 1900,
+        "y": 350
+      },
+      "is_disabled": false
+    },
+    {
+      "node_id": "done",
+      "type": "set",
+      "name": "DONE",
+      "description": "",
+      "parameters": {
+        "fields": [
+          {
+            "name": "status",
+            "value": "success"
+          },
+          {
+            "name": "tables",
+            "value": "12 created"
+          },
+          {
+            "name": "seeds",
+            "value": "~90 rows inserted"
+          }
+        ]
+      },
+      "position": {
+        "x": 2200,
+        "y": 350
+      },
+      "is_disabled": false
+    },
+    {
+      "node_id": "note_0",
+      "type": "note",
+      "name": "0. How to run",
+      "description": "",
+      "parameters": {
+        "noteText": "══════════════════════════════════════════\n  DEE EMPIRE — DATABASE FOUNDATION\n  Complete setup in one workflow\n══════════════════════════════════════════\n\nRUN ONCE to initialize the entire company\ndatabase from scratch.\n\nThis workflow covers EVERYTHING:\n  Section 1 → 6 CRM tables\n  Section 2 → 4 Support tables\n  Section 3 → Companies + Dee Empire data\n  Section 4 → Document system (2 tables)\n  Section 5 → i18n translations (54 keys)\n  Section 6 → Services catalog (9 + 20)\n\nSAFE TO RE-RUN:\n  All SQL uses IF NOT EXISTS and\n  ON CONFLICT DO NOTHING.\n  No data will be lost or duplicated.\n\nTOTAL: 12 tables created, ~90 rows seeded."
+      },
+      "position": {
+        "x": -200,
+        "y": -260
+      },
+      "is_disabled": false
+    },
+    {
+      "node_id": "note_1",
+      "type": "note",
+      "name": "1. CRM Tables",
+      "description": "",
+      "parameters": {
+        "noteText": "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n  SECTION 1 — CRM CORE TABLES\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\nCreates 6 tables for managing sales:\n\nleads            Track every prospect\ncustomers        Active paying clients\nopportunities    Sales deals & pipeline\ncommunications   All call/email/WhatsApp history\nproposals        Quotes and contracts\nfinancial_tracking  Monthly MRR snapshots\n\nAll tables include:\n  • UUID primary keys\n  • TIMESTAMPTZ timestamps\n  • company_id (soft link to companies)\n  • preferred_language (de/en/tr/ar)"
+      },
+      "position": {
+        "x": 340,
+        "y": 640
+      },
+      "is_disabled": false
+    },
+    {
+      "node_id": "note_2",
+      "type": "note",
+      "name": "2. Support Tables",
+      "description": "",
+      "parameters": {
+        "noteText": "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n  SECTION 2 — SUPPORT TABLES\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\nCreates 4 foundation tables used by\nall other workflows:\n\ni18n_translations  All UI labels in de/en/tr/ar.\n                   Every dropdown key maps here.\nmessage_templates  WhatsApp/email/SMS templates.\n                   Keyed by language + channel.\nservices           9 service types with names\n                   in 4 languages.\nservice_packages   20 pricing tiers in EUR.\n                   Setup fee + monthly fee ranges."
+      },
+      "position": {
+        "x": 640,
+        "y": -240
+      },
+      "is_disabled": false
+    },
+    {
+      "node_id": "note_3",
+      "type": "note",
+      "name": "3. Company Setup",
+      "description": "",
+      "parameters": {
+        "noteText": "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n  SECTION 3 — COMPANY IDENTITY\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\nCreates companies table and seeds\nDee Empire as the first company.\n\nTable fields include:\n  name, legal_name\n  tax_number     230/274/01007\n  vat_id         DE455289768\n  iban           DE7177061040000236373\n  bic            GENODEF1ALK\n  address        Forststraße 6\n                 96264 Altenkunstadt\n  phone          09572 8744 123\n  email          admin@dee-empire.com\n  website        https://dee-empire.com\n  company_type   own / client\n  currency       EUR\n\nUsed on: all invoices, proposals,\n         contracts (§14 UStG compliance)."
+      },
+      "position": {
+        "x": 980,
+        "y": 560
+      },
+      "is_disabled": false
+    },
+    {
+      "node_id": "note_4",
+      "type": "note",
+      "name": "4. Document System",
+      "description": "",
+      "parameters": {
+        "noteText": "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n  SECTION 4 — DOCUMENT SYSTEM\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\nCreates 2 document tracking tables:\n\ndocument_sequences\n  Auto-incrementing number counter.\n  One row per document type per year.\n  Seeded for 2026:\n    DEE-INV (invoices)\n    DEE-PRO (proposals)\n    DEE-CON (contracts)\n    DEE-NDA (NDAs)\n    DEE-RPT (reports)\n    DEE-ONB (onboarding)\n    DEE-QUO (quotes)\n    DEE-REC (receipts)\n\ndocuments\n  Master registry for every file ever\n  created. Stores: document_number,\n  document_type, file_format (pdf/docx/\n  xlsx/html/csv/png/jpg/zip), file_url,\n  storage_provider, storage_key,\n  financial amounts, lifecycle timestamps."
+      },
+      "position": {
+        "x": 1280,
+        "y": -420
+      },
+      "is_disabled": false
+    },
+    {
+      "node_id": "note_5",
+      "type": "note",
+      "name": "5. i18n Seed",
+      "description": "",
+      "parameters": {
+        "noteText": "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n  SECTION 5 — i18n TRANSLATIONS\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\nSeeds 54 translation keys in de/en/tr/ar.\n\nCategories:\n  status (16)      new, contacted, qualified,\n                   disqualified, open, in_progress,\n                   won, lost, active, at_risk,\n                   churned, draft, sent, accepted,\n                   rejected, negotiating\n  industry (12)    salon, clinic, restaurant,\n                   real_estate, retail, agency,\n                   tech, hotel, legal, education,\n                   logistics, other\n  service_type (9) website, ai_agent, workflow,\n                   app_dev, support_bot, appointments,\n                   lead_gen, devops, platform\n  priority (4)     critical, high, medium, low\n  lead_source (5)  manual_search, linkedin, referral,\n                   inbound, cold_outreach\n  file_format (8)  pdf, docx, xlsx, html,\n                   csv, png, jpg, zip"
+      },
+      "position": {
+        "x": 1640,
+        "y": 580
+      },
+      "is_disabled": false
+    },
+    {
+      "node_id": "note_6",
+      "type": "note",
+      "name": "6. Services Seed",
+      "description": "",
+      "parameters": {
+        "noteText": "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n  SECTION 6 — SERVICES CATALOG\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\nSeeds full product and pricing catalog.\n\n9 Services:\n  website, ai_agent, workflow, app_dev,\n  support_bot, appointments, lead_gen,\n  devops, platform\n  (each with names in de/en/tr/ar)\n\n20 Packages (all in EUR):\n  Website: Basic/Business/E-Commerce\n  AI Agent: Basic/Business/Multi/Enterprise\n  Workflow: Single/Bundle/Full\n  Appointments: Basic/Full/Clinic\n  Lead Gen: Bot/Full System\n  Support Bot: FAQ/AI Agent\n  Platform: Starter/Growth/Enterprise\n\nUsed by: proposal generator, pricing\n         calculator, sales pipeline."
+      },
+      "position": {
+        "x": 1900,
+        "y": -240
+      },
+      "is_disabled": false
+    }
+  ],
+  "connections": [
+    {
+      "source_node_id": "trigger",
+      "target_node_id": "crm",
+      "source_handle": "output",
+      "target_handle": "input"
+    },
+    {
+      "source_node_id": "support",
+      "target_node_id": "company",
+      "source_handle": "output",
+      "target_handle": "input"
+    },
+    {
+      "source_node_id": "i18n",
+      "target_node_id": "services",
+      "source_handle": "output",
+      "target_handle": "input"
+    },
+    {
+      "source_node_id": "crm",
+      "target_node_id": "support",
+      "source_handle": "output",
+      "target_handle": "input"
+    },
+    {
+      "source_node_id": "services",
+      "target_node_id": "done",
+      "source_handle": "output",
+      "target_handle": "input"
+    },
+    {
+      "source_node_id": "company",
+      "target_node_id": "docs",
+      "source_handle": "output",
+      "target_handle": "input"
+    },
+    {
+      "source_node_id": "docs",
+      "target_node_id": "i18n",
+      "source_handle": "output",
+      "target_handle": "input"
+    }
+  ],
+  "groups": []
+}

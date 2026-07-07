@@ -1,0 +1,125 @@
+{
+  "nodes": [
+    {
+      "node_id": "2af1182e-505e-4e35-b6c0-8cf0090738ef",
+      "type": "start",
+      "name": "START",
+      "description": "",
+      "parameters": {},
+      "position": {
+        "x": 0,
+        "y": 0
+      },
+      "is_disabled": false
+    },
+    {
+      "node_id": "6a917922-f19d-4f41-88e4-5bb004b90ca8",
+      "type": "pdf_render",
+      "name": "Render sample PDF",
+      "description": "",
+      "parameters": {
+        "html": "<!DOCTYPE html><html lang=\"de\"><head><meta charset=\"UTF-8\">\n<style>\n* { margin:0; padding:0; box-sizing:border-box; }\nbody { font-family:Arial,Helvetica,sans-serif; font-size:10pt; color:#1a1a1a; }\n.page { width:210mm; padding:18mm 20mm 28mm 20mm; }\n.hdr  { display:flex; justify-content:space-between; align-items:flex-start;\n        padding-bottom:5mm; border-bottom:2px solid #1a1a1a; margin-bottom:8mm; }\n.logo img { max-height:44px; max-width:160px; }\n.co  { text-align:right; font-size:8pt; color:#555; line-height:1.65; }\n.co strong { display:block; font-size:10.5pt; color:#1a1a1a; margin-bottom:1mm; }\n.meta-row { display:flex; justify-content:space-between; margin-bottom:9mm; }\n.adr { font-size:9pt; line-height:1.75; }\n.adr-lbl { font-size:7pt; text-transform:uppercase; letter-spacing:1px; color:#aaa; margin-bottom:1.5mm; }\n.doc-title { font-size:22pt; font-weight:bold; color:#1a1a1a; margin-bottom:8mm; }\ntable.t { width:100%; border-collapse:collapse; margin-bottom:6mm; font-size:9pt; }\ntable.t thead tr { background:#f5f5f5; }\ntable.t th { padding:2.5mm 3.5mm; font-size:7.5pt; text-transform:uppercase; color:#777;\n             font-weight:bold; border-bottom:1.5px solid #ccc; text-align:left; }\ntable.t th.r, table.t td.r { text-align:right; }\ntable.t tbody tr { border-bottom:1px solid #f0f0f0; }\ntable.t td { padding:3mm 3.5mm; vertical-align:top; }\n.totals-wrap { display:flex; justify-content:flex-end; margin-bottom:8mm; }\n.totals { min-width:70mm; font-size:9pt; }\n.trow { display:flex; justify-content:space-between; padding:1.5mm 0; }\n.trow.sep { border-top:1px solid #ddd; margin-top:1.5mm; padding-top:2.5mm; }\n.trow.bold { font-weight:bold; font-size:11pt; border-top:2px solid #1a1a1a;\n             margin-top:2mm; padding-top:2.5mm; }\n.slbl { font-size:7.5pt; font-weight:bold; text-transform:uppercase; letter-spacing:0.5px;\n        color:#aaa; margin:6mm 0 2mm; }\n.pbox { background:#f8f8f8; border-left:3px solid #ddd; padding:4mm 5mm;\n        font-size:9pt; line-height:1.8; margin-bottom:6mm; }\n.clause { margin-bottom:5mm; }\n.ctitle { font-size:9.5pt; font-weight:bold; margin-bottom:2mm; }\np { font-size:9pt; line-height:1.65; color:#333; margin-bottom:3mm; }\n.sig-row { display:flex; gap:16mm; margin-top:14mm; }\n.sig { flex:1; padding-top:2mm; border-top:1px solid #bbb; font-size:8pt; color:#777; }\n.footer { position:fixed; bottom:10mm; left:20mm; right:20mm; border-top:1px solid #ddd;\n          padding-top:2.5mm; display:flex; justify-content:space-between;\n          font-size:6.5pt; color:#bbb; }</style></head><body><div class=\"page\">\n  <div class=\"hdr\">\n    <div class=\"logo\"><img src=\"https://storage.googleapis.com/dee-empire-artifacts/dee-empire.PNG\" alt=\"Dee Empire\"></div>\n    <div class=\"co\">\n      <strong>Dee Empire</strong>\n      Forststra&szlig;e 6 &middot; 96264 Altenkunstadt<br>\n      admin@dee-empire.com &middot; 09572 8744 123<br>\n      dee-empire.com\n    </div>\n  </div>\n  <div class=\"meta-row\">\n    <div class=\"adr\"><div class=\"adr-lbl\">Auftraggeber</div><strong>Mustermann GmbH</strong><br>Max Mustermann<br>Musterstra&szlig;e 1<br>12345 Berlin<br>Deutschland</div>\n    <div class=\"adr\" style=\"text-align:right\">\n      <div class=\"adr-lbl\">Angebotsdaten</div>\n      Angebotsnr.: <strong>DEE-PRO-2026-DEMO</strong><br>\n      Datum: 08.06.2026<br>\n      G&uuml;ltig bis: <strong>08.07.2026</strong>\n    </div>\n  </div>\n  <div class=\"doc-title\">Angebot</div>\n  <table class=\"t\">\n    <thead><tr>\n      <th style=\"width:7%\">Pos.</th><th>Leistungsbeschreibung</th>\n      <th class=\"r\" style=\"width:22%\">Preis (netto)</th>\n    </tr></thead>\n    <tbody>\n      <tr><td>1</td><td>Prozessanalyse &amp; Strategieberatung (5 Tage)</td><td class=\"r\">3.000,00 EUR</td></tr>\n      <tr><td>2</td><td>Entwicklung KI-Automatisierungsl&ouml;sung</td><td class=\"r\">6.000,00 EUR</td></tr>\n      <tr><td>3</td><td>Schulung, Dokumentation &amp; &Uuml;bergabe</td><td class=\"r\">1.200,00 EUR</td></tr>\n    </tbody>\n  </table>\n  <div class=\"totals-wrap\"><div class=\"totals\">\n    <div class=\"trow\"><span>Nettobetrag</span><span>10.200,00 EUR</span></div>\n    <div class=\"trow sep\"><span>MwSt. 19&nbsp;%</span><span>1.938,00 EUR</span></div>\n    <div class=\"trow bold\"><span>Gesamtbetrag</span><span>12.138,00 EUR</span></div>\n  </div></div>\n  <div class=\"slbl\">Annahme &amp; n&auml;chste Schritte</div>\n  <div class=\"pbox\">\n    Dieses Angebot ist g&uuml;ltig bis <strong>08.07.2026</strong>.\n    Bei Fragen stehen wir unter admin@dee-empire.com oder 09572&nbsp;8744&nbsp;123 zur Verf&uuml;gung.<br>\n    Bitte senden Sie Ihre Auftragsbet&auml;tigung per E-Mail an admin@dee-empire.com.\n  </div>\n  <div class=\"footer\">\n    <span>Dee Empire &middot; Forststra&szlig;e 6 &middot; 96264 Altenkunstadt</span>\n    <span>St.-Nr.: 230/274/01007 &middot; USt-IdNr.: DE455289768</span>\n    <span>IBAN: DE7177061040000236373 &middot; BIC: GENODEF1ALK</span>\n  </div></div></body></html>",
+        "margin": "10mm",
+        "filename": "sample-proposal.pdf",
+        "page_size": "A4"
+      },
+      "position": {
+        "x": 200,
+        "y": 0
+      },
+      "is_disabled": false
+    },
+    {
+      "node_id": "5bb08c2c-a7a5-4f2f-bc19-4cd3de48082e",
+      "type": "storage_upload",
+      "name": "Upload to templates/samples/",
+      "description": "",
+      "parameters": {
+        "body": "{{path}}",
+        "bucket": "crowpus-docs-bucket",
+        "object_name": "templates/samples/sample-proposal.pdf",
+        "content_type": "application/pdf"
+      },
+      "position": {
+        "x": 400,
+        "y": 0
+      },
+      "is_disabled": false
+    },
+    {
+      "node_id": "c775c2a5-0075-4607-9726-9bb59ccd3b3a",
+      "type": "storage_signed_url",
+      "name": "Generate signed URL",
+      "description": "",
+      "parameters": {
+        "bucket": "crowpus-docs-bucket",
+        "method": "GET",
+        "expires_in": 604800,
+        "object_name": "templates/samples/sample-proposal.pdf"
+      },
+      "position": {
+        "x": 600,
+        "y": 0
+      },
+      "is_disabled": false
+    },
+    {
+      "node_id": "3b064ba0-7a3e-41f2-bf16-62218ebc7c79",
+      "type": "set",
+      "name": "DONE — signed URL",
+      "description": "",
+      "parameters": {
+        "fields": [
+          {
+            "name": "status",
+            "value": "success"
+          },
+          {
+            "name": "document_type",
+            "value": "proposal"
+          },
+          {
+            "name": "signed_url",
+            "value": "{{url}}"
+          },
+          {
+            "name": "storage_path",
+            "value": "templates/samples/sample-proposal.pdf"
+          }
+        ]
+      },
+      "position": {
+        "x": 800,
+        "y": 0
+      },
+      "is_disabled": false
+    }
+  ],
+  "connections": [
+    {
+      "source_node_id": "2af1182e-505e-4e35-b6c0-8cf0090738ef",
+      "target_node_id": "6a917922-f19d-4f41-88e4-5bb004b90ca8",
+      "source_handle": "output",
+      "target_handle": "input"
+    },
+    {
+      "source_node_id": "6a917922-f19d-4f41-88e4-5bb004b90ca8",
+      "target_node_id": "5bb08c2c-a7a5-4f2f-bc19-4cd3de48082e",
+      "source_handle": "output",
+      "target_handle": "input"
+    },
+    {
+      "source_node_id": "5bb08c2c-a7a5-4f2f-bc19-4cd3de48082e",
+      "target_node_id": "c775c2a5-0075-4607-9726-9bb59ccd3b3a",
+      "source_handle": "output",
+      "target_handle": "input"
+    },
+    {
+      "source_node_id": "c775c2a5-0075-4607-9726-9bb59ccd3b3a",
+      "target_node_id": "3b064ba0-7a3e-41f2-bf16-62218ebc7c79",
+      "source_handle": "output",
+      "target_handle": "input"
+    }
+  ],
+  "groups": []
+}

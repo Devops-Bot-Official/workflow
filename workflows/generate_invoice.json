@@ -1,0 +1,178 @@
+{
+  "nodes": [
+    {
+      "node_id": "aa1346e3-49c2-40d4-b1c7-1166b309e83c",
+      "type": "start",
+      "name": "START — Invoice inputs",
+      "description": "",
+      "parameters": {},
+      "position": {
+        "x": 0,
+        "y": 0
+      },
+      "is_disabled": false
+    },
+    {
+      "node_id": "1ed796b9-5996-428d-b916-ff8c79c369bc",
+      "type": "database",
+      "name": "Step 1 — Assign invoice number",
+      "description": "",
+      "parameters": {
+        "query": "\nUPDATE document_sequences\nSET last_number = last_number + 1,\n    updated_at  = NOW()\nWHERE document_type = 'invoice'\n  AND year = EXTRACT(YEAR FROM NOW())::int\nRETURNING\n  prefix || '-' || year::text || '-' || LPAD(last_number::text, 3, '0') AS document_number,\n  last_number AS invoice_seq;"
+      },
+      "position": {
+        "x": 200,
+        "y": 0
+      },
+      "is_disabled": false
+    },
+    {
+      "node_id": "926b5348-3af8-4c32-8e9c-0908afb3d68f",
+      "type": "database",
+      "name": "Step 2 — Get customer details",
+      "description": "",
+      "parameters": {
+        "query": "\nSELECT\n  id::text                                          AS customer_uuid,\n  COALESCE(company_name, full_name, name, '')       AS client_company_name,\n  COALESCE(contact_name, full_name, '')             AS client_contact_name,\n  COALESCE(street, address_street, '')              AS client_street,\n  COALESCE(zip, postal_code, '')                    AS client_zip,\n  COALESCE(city, '')                                AS client_city,\n  COALESCE(country, 'Deutschland')                  AS client_country,\n  COALESCE(vat_id, '')                              AS client_vat_id,\n  COALESCE(customer_number::text, id::text)         AS client_number\nFROM customers\nWHERE id = '{{customer_id}}'::uuid\nLIMIT 1;"
+      },
+      "position": {
+        "x": 400,
+        "y": 0
+      },
+      "is_disabled": false
+    },
+    {
+      "node_id": "e3bc0f1b-392f-4cec-b7f4-eca9320fe8cc",
+      "type": "database",
+      "name": "Step 3 — Create draft document record",
+      "description": "",
+      "parameters": {
+        "query": "\nINSERT INTO documents (\n  document_number,\n  document_type,\n  title,\n  language,\n  status,\n  customer_id,\n  lead_id,\n  amount_net,\n  amount_tax,\n  amount_gross,\n  tax_rate,\n  currency,\n  file_format,\n  mime_type,\n  generated_by,\n  tags,\n  notes\n)\nVALUES (\n  '{{document_number}}',\n  'invoice',\n  'Rechnung {{document_number}}',\n  '{{language}}',\n  'draft',\n  '{{customer_id}}'::uuid,\n  NULLIF('{{lead_id}}', '')::uuid,\n  '{{amount_net}}'::numeric,\n  '{{amount_tax}}'::numeric,\n  '{{amount_gross}}'::numeric,\n  '{{tax_rate}}'::numeric,\n  'EUR',\n  'pdf',\n  'application/pdf',\n  'GENERATE-invoice',\n  jsonb_build_object(\n    'template_key',    'invoice_template',\n    'service_period',  '{{service_period}}',\n    'due_date',        '{{due_date}}',\n    'subject',         '{{subject}}',\n    'tax_note',        '{{tax_note}}'\n  ),\n  NULLIF('{{notes}}', '')\n)\nRETURNING\n  id::text     AS document_id,\n  document_number,\n  status,\n  amount_gross AS total;"
+      },
+      "position": {
+        "x": 600,
+        "y": 0
+      },
+      "is_disabled": false
+    },
+    {
+      "node_id": "7695bc36-d554-4bda-8320-ff65d7b427c1",
+      "type": "set",
+      "name": "Step 4 — Output (ready for PDF renderer)",
+      "description": "",
+      "parameters": {
+        "fields": [
+          {
+            "name": "status",
+            "value": "success"
+          },
+          {
+            "name": "document_number",
+            "value": "{{document_number}}"
+          },
+          {
+            "name": "document_id",
+            "value": "{{document_id}}"
+          },
+          {
+            "name": "invoice_number",
+            "value": "{{document_number}}"
+          },
+          {
+            "name": "invoice_date",
+            "value": "{{invoice_date}}"
+          },
+          {
+            "name": "client_company",
+            "value": "{{client_company_name}}"
+          },
+          {
+            "name": "template_key",
+            "value": "invoice_template"
+          },
+          {
+            "name": "language",
+            "value": "{{language}}"
+          },
+          {
+            "name": "next_step",
+            "value": "POST document_id + all variables to PDF renderer → renderer updates documents record with file_url, storage_key"
+          }
+        ]
+      },
+      "position": {
+        "x": 800,
+        "y": 0
+      },
+      "is_disabled": false
+    },
+    {
+      "node_id": "9e9ae7c0-4e78-40cb-8b04-b21be2c784ee",
+      "type": "note",
+      "name": "📋 How to use",
+      "description": "",
+      "parameters": {
+        "noteText": "GENERATE-invoice — Creates a numbered invoice record\n\nREQUIRED INPUTS:\n  customer_id      UUID     ID from customers table\n  language         TEXT     de / en\n  service_period   TEXT     e.g. \"Juni 2026\" (§14 UStG: Leistungszeitraum)\n  due_date         TEXT     e.g. \"2026-06-22\"\n  subject          TEXT     e.g. \"CrowPus Plattform — Monatliches Paket\"\n  invoice_rows     TEXT     HTML <tr> rows for line items (see format below)\n  subtotal_net     TEXT     e.g. \"299,00 €\"\n  tax_rate         TEXT     e.g. \"19\" (percent as number)\n  tax_amount       TEXT     e.g. \"56,81 €\"\n  total_gross      TEXT     e.g. \"355,81 €\"\n  amount_net       NUMBER   299.00  (numeric, for DB record)\n  amount_tax       NUMBER   56.81\n  amount_gross     NUMBER   355.81\n\nOPTIONAL INPUTS (leave \"\" to skip):\n  lead_id          UUID     if billing a lead before conversion\n  tax_note         TEXT     e.g. \"Steuerschuldnerschaft des Leistungsempfängers §13b UStG\"\n  notes            TEXT     internal notes\n\ninvoice_rows FORMAT (HTML):\n  <tr>\n    <td class=\"pos\">1</td>\n    <td>CrowPus Plattform — Monatliches Paket</td>\n    <td class=\"qty\">1</td>\n    <td class=\"unit\">Monat</td>\n    <td class=\"num\">299,00 €</td>\n    <td class=\"num\">299,00 €</td>\n  </tr>\n\nOUTPUT:\n  document_number   DEE-INV-2026-001\n  document_id       UUID of the documents record\n  status            draft"
+      },
+      "position": {
+        "x": -220,
+        "y": 200
+      },
+      "is_disabled": false
+    },
+    {
+      "node_id": "805b4406-e94b-4bea-9754-43983acf5573",
+      "type": "note",
+      "name": "🔄 Full pipeline flow",
+      "description": "",
+      "parameters": {
+        "noteText": "GENERATE-invoice — 4-step pipeline\n\nStep 1 — DB: Get invoice number\n  UPDATE document_sequences (atomic, concurrent-safe)\n  → document_number = DEE-INV-2026-001\n\nStep 2 — DB: Get customer details\n  SELECT from customers WHERE id = {{customer_id}}\n  → client_company_name, client_contact_name,\n    client_street, client_zip, client_city,\n    client_country, client_vat_id, client_number\n\nStep 3 — DB: Create draft document record\n  INSERT INTO documents (document_number, amounts, tags...)\n  tags JSONB stores: template_key, service_period, due_date,\n                     subject, tax_note\n  → document_id, document_number, status='draft'\n\nStep 4 — SET: Output all data needed for PDF renderer\n  Returns everything the PDF service needs to:\n    a) Fetch template from document_templates\n    b) Substitute all {{variables}} in the HTML\n    c) Generate PDF via Puppeteer\n    d) Upload to GCS: invoices/{{year}}/{{document_number}}.pdf\n    e) UPDATE documents SET file_url, storage_key... WHERE id = document_id\n\n── WHEN PDF SERVICE IS READY ─────────────────────────────\nAdd between Step 3 and Step 4:\n  HTTP node → PDF generation service\n    POST /generate-pdf\n    {\n      \"document_id\":    \"{{document_id}}\",\n      \"document_number\":\"{{document_number}}\",\n      \"template_key\":   \"invoice_template\",\n      \"language\":       \"{{language}}\",\n      \"variables\": {\n        \"invoice_number\":     \"{{document_number}}\",\n        \"invoice_date\":       \"{{invoice_date}}\",\n        \"service_period\":     \"{{service_period}}\",\n        \"due_date\":           \"{{due_date}}\",\n        \"client_company_name\":\"{{client_company_name}}\",\n        ... all template vars\n      }\n    }"
+      },
+      "position": {
+        "x": 320,
+        "y": 200
+      },
+      "is_disabled": false
+    },
+    {
+      "node_id": "4a56647b-85f6-4184-9196-ec5b52b5d37d",
+      "type": "note",
+      "name": "📄 Template variables reference",
+      "description": "",
+      "parameters": {
+        "noteText": "invoice_template — all {{variables}} needed for HTML render\n\nDocument info:\n  invoice_number        DEE-INV-2026-001\n  invoice_date          08.06.2026\n  service_period        Juni 2026\n  due_date              22.06.2026\n\nClient info (from customers table):\n  client_number         from customers.customer_number\n  client_company_name   from customers.company_name\n  client_contact_name   from customers.contact_name\n  client_street         from customers.street\n  client_zip            from customers.zip\n  client_city           from customers.city\n  client_country        from customers.country\n  client_vat_id         from customers.vat_id\n\nLine items (HTML):\n  invoice_rows          <tr>...</tr> HTML rows\n  subject               invoice description line\n\nFinancials:\n  subtotal_net          \"299,00 €\"\n  tax_rate              \"19\"\n  tax_amount            \"56,81 €\"\n  total_gross           \"355,81 €\"\n  tax_note              \"\" or \"§13b UStG\" etc.\n\nStorage path after upload:\n  storage_key    invoices/2026/DEE-INV-2026-001.pdf\n  storage_bucket crowpus-docs-bucket\n  file_url       signed GCS URL"
+      },
+      "position": {
+        "x": 880,
+        "y": 220
+      },
+      "is_disabled": false
+    }
+  ],
+  "connections": [
+    {
+      "source_node_id": "aa1346e3-49c2-40d4-b1c7-1166b309e83c",
+      "target_node_id": "1ed796b9-5996-428d-b916-ff8c79c369bc",
+      "source_handle": "output",
+      "target_handle": "input"
+    },
+    {
+      "source_node_id": "1ed796b9-5996-428d-b916-ff8c79c369bc",
+      "target_node_id": "926b5348-3af8-4c32-8e9c-0908afb3d68f",
+      "source_handle": "output",
+      "target_handle": "input"
+    },
+    {
+      "source_node_id": "926b5348-3af8-4c32-8e9c-0908afb3d68f",
+      "target_node_id": "e3bc0f1b-392f-4cec-b7f4-eca9320fe8cc",
+      "source_handle": "output",
+      "target_handle": "input"
+    },
+    {
+      "source_node_id": "e3bc0f1b-392f-4cec-b7f4-eca9320fe8cc",
+      "target_node_id": "7695bc36-d554-4bda-8320-ff65d7b427c1",
+      "source_handle": "output",
+      "target_handle": "input"
+    }
+  ],
+  "groups": []
+}

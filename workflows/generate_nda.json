@@ -1,0 +1,174 @@
+{
+  "nodes": [
+    {
+      "node_id": "ffa5c534-484e-4da1-9bfc-67212a656310",
+      "type": "start",
+      "name": "START — NDA inputs",
+      "description": "",
+      "parameters": {},
+      "position": {
+        "x": 0,
+        "y": 0
+      },
+      "is_disabled": false
+    },
+    {
+      "node_id": "2a95722a-2cf5-45cf-98b3-bdf0daa567c4",
+      "type": "database",
+      "name": "Step 1 — Assign NDA number",
+      "description": "",
+      "parameters": {
+        "query": "\nUPDATE document_sequences\nSET last_number = last_number + 1,\n    updated_at  = NOW()\nWHERE document_type = 'nda'\n  AND year = EXTRACT(YEAR FROM NOW())::int\nRETURNING\n  prefix || '-' || year::text || '-' || LPAD(last_number::text, 3, '0') AS document_number;"
+      },
+      "position": {
+        "x": 200,
+        "y": 0
+      },
+      "is_disabled": false
+    },
+    {
+      "node_id": "6f106cd6-dc15-4c7a-bb64-093ddccb39ad",
+      "type": "database",
+      "name": "Step 2 — Get client details",
+      "description": "",
+      "parameters": {
+        "query": "\nSELECT\n  COALESCE(c.id::text, l.id::text)                                   AS client_uuid,\n  COALESCE(c.company_name, c.full_name, c.name,\n           l.company_name, l.business_name, l.full_name, '')          AS client_company_name,\n  COALESCE(c.contact_name, c.full_name,\n           l.contact_name, l.full_name, '')                           AS client_contact_name,\n  COALESCE(c.street, c.address_street, l.street, l.address, '')       AS client_street,\n  COALESCE(c.zip, c.postal_code, l.zip, l.postal_code, '')            AS client_zip,\n  COALESCE(c.city, l.city, '')                                         AS client_city,\n  COALESCE(c.country, l.country, 'Deutschland')                        AS client_country\nFROM\n  (SELECT * FROM customers WHERE id = NULLIF('{{customer_id}}', '')::uuid LIMIT 1) c\n  FULL OUTER JOIN\n  (SELECT * FROM leads WHERE id = NULLIF('{{lead_id}}', '')::uuid LIMIT 1) l\n  ON FALSE\nLIMIT 1;"
+      },
+      "position": {
+        "x": 400,
+        "y": 0
+      },
+      "is_disabled": false
+    },
+    {
+      "node_id": "69003bc3-fa61-4209-95ad-1f8f37876282",
+      "type": "database",
+      "name": "Step 3 — Create draft NDA record",
+      "description": "",
+      "parameters": {
+        "query": "\nINSERT INTO documents (\n  document_number,\n  document_type,\n  title,\n  language,\n  status,\n  customer_id,\n  lead_id,\n  currency,\n  file_format,\n  mime_type,\n  generated_by,\n  tags,\n  expires_at,\n  notes\n)\nVALUES (\n  '{{document_number}}',\n  'nda',\n  'Geheimhaltungsvereinbarung {{document_number}}',\n  '{{language}}',\n  'draft',\n  NULLIF('{{customer_id}}', '')::uuid,\n  NULLIF('{{lead_id}}', '')::uuid,\n  'EUR',\n  'pdf',\n  'application/pdf',\n  'GENERATE-nda',\n  jsonb_build_object(\n    'template_key',           'nda_template',\n    'nda_type',               '{{nda_type}}',\n    'purpose',                '{{purpose}}',\n    'confidential_info',      '{{confidential_info}}',\n    'duration_months',        '{{duration_months}}',\n    'governing_law',          '{{governing_law}}'\n  ),\n  CASE\n    WHEN '{{duration_months}}' ~ '^d+$'\n    THEN NOW() + ('{{duration_months}}' || ' months')::interval\n    ELSE NULL\n  END,\n  NULLIF('{{notes}}', '')\n)\nRETURNING\n  id::text        AS document_id,\n  document_number,\n  status,\n  expires_at::date::text AS valid_until;"
+      },
+      "position": {
+        "x": 600,
+        "y": 0
+      },
+      "is_disabled": false
+    },
+    {
+      "node_id": "a18ab650-d45d-4262-9851-f5492ca67a2a",
+      "type": "set",
+      "name": "Step 4 — Output (ready for PDF renderer)",
+      "description": "",
+      "parameters": {
+        "fields": [
+          {
+            "name": "status",
+            "value": "success"
+          },
+          {
+            "name": "document_number",
+            "value": "{{document_number}}"
+          },
+          {
+            "name": "document_id",
+            "value": "{{document_id}}"
+          },
+          {
+            "name": "valid_until",
+            "value": "{{valid_until}}"
+          },
+          {
+            "name": "client_company",
+            "value": "{{client_company_name}}"
+          },
+          {
+            "name": "template_key",
+            "value": "nda_template"
+          },
+          {
+            "name": "language",
+            "value": "{{language}}"
+          },
+          {
+            "name": "next_step",
+            "value": "POST document_id + variables to PDF renderer → upload to ndas/YEAR/document_number.pdf → UPDATE documents"
+          }
+        ]
+      },
+      "position": {
+        "x": 800,
+        "y": 0
+      },
+      "is_disabled": false
+    },
+    {
+      "node_id": "fc2d9440-8f6c-4138-a990-4390bfa5148b",
+      "type": "note",
+      "name": "📋 How to use",
+      "description": "",
+      "parameters": {
+        "noteText": "GENERATE-nda — Creates a numbered NDA record\n\nCLIENT (provide ONE):\n  customer_id    UUID   from customers table (leave \"\" for lead)\n  lead_id        UUID   from leads table     (leave \"\" for customer)\n\nREQUIRED INPUTS:\n  language          TEXT   de / en\n  nda_type          TEXT   mutual / one-way\n  purpose           TEXT   e.g. \"Evaluation of AI automation services\"\n  confidential_info TEXT   what information is covered\n  governing_law     TEXT   e.g. \"Deutsches Recht / German law\"\n\nOPTIONAL:\n  duration_months   TEXT   integer e.g. \"24\" — leave \"\" for indefinite\n  notes             TEXT   internal notes\n\nOUTPUT:\n  document_number   DEE-NDA-2026-001\n  document_id       UUID of the documents record\n  valid_until       NOW() + duration_months (NULL if indefinite)\n  status            draft\n\nNDA TYPES:\n  mutual   — both parties keep each other's info confidential\n  one-way  — only receiving party has confidentiality obligation\n\nAFTER NDA IS SIGNED:\n  UPDATE documents\n  SET status    = 'signed',\n      signed_at = NOW()\n  WHERE id = '{{document_id}}'::uuid"
+      },
+      "position": {
+        "x": -180,
+        "y": 180
+      },
+      "is_disabled": false
+    },
+    {
+      "node_id": "89f228f7-b775-41c6-ac51-53ad3f36beb2",
+      "type": "note",
+      "name": "🔄 Full pipeline flow",
+      "description": "",
+      "parameters": {
+        "noteText": "GENERATE-nda — 4-step pipeline\n\nStep 1 — DB: Assign NDA number\n  UPDATE document_sequences (atomic)\n  → document_number = DEE-NDA-2026-001\n\nStep 2 — DB: Get client details\n  FULL OUTER JOIN: works for leads AND customers.\n  Provide customer_id OR lead_id (or both).\n  → client_company_name, client_contact_name, address\n\nStep 3 — DB: Create draft NDA record\n  expires_at = NOW() + duration_months\n    OR NULL if duration_months is blank (indefinite NDA)\n  tags JSONB stores: nda_type, purpose,\n    confidential_info, duration, governing_law\n  → document_id, document_number, valid_until\n\nStep 4 — SET: Output for PDF renderer\n\n── DOCUMENT LIFECYCLE ────────────────────────────────────\n  draft    → generated, not yet sent\n  sent     → sent to client for review/signature\n  signed   → both parties signed (set signed_at = NOW())\n  archived → NDA expired or superseded\n\n── TYPICAL FLOW ─────────────────────────────────────────\n  1. GENERATE-nda (this pipeline)\n  2. Send PDF to client\n  3. Client signs → UPDATE documents SET status='signed'\n  4. GENERATE-proposal (now safe to share details)\n  5. GENERATE-contract (after proposal accepted)"
+      },
+      "position": {
+        "x": 240,
+        "y": 200
+      },
+      "is_disabled": false
+    },
+    {
+      "node_id": "58404cb7-9bf1-4a68-944c-7b7481581e92",
+      "type": "note",
+      "name": "📄 Template variables reference",
+      "description": "",
+      "parameters": {
+        "noteText": "nda_template — all {{variables}} needed\n\nDocument info:\n  nda_number          DEE-NDA-2026-001\n  nda_date            08.06.2026\n  valid_until         08.06.2028  (if 24 months) / indefinite\n  nda_type            mutual / one-way\n\nDisclosing party (always Dee Empire):\n  de_company_name     Dee Empire UG (haftungsbeschränkt)\n  de_street           [from company settings]\n  de_city             [from company settings]\n  de_representative   Mohamed Sesay\n\nReceiving party (from customers or leads):\n  client_company_name\n  client_contact_name\n  client_street / client_zip / client_city / client_country\n\nNDA content:\n  purpose             reason for information exchange\n  confidential_info   description of confidential information\n  governing_law       e.g. \"Deutsches Recht\"\n  duration_months     e.g. \"24\" or \"indefinite\"\n\nStorage path after upload:\n  storage_key    ndas/2026/DEE-NDA-2026-001.pdf\n  storage_bucket crowpus-docs-bucket"
+      },
+      "position": {
+        "x": 760,
+        "y": 200
+      },
+      "is_disabled": false
+    }
+  ],
+  "connections": [
+    {
+      "source_node_id": "ffa5c534-484e-4da1-9bfc-67212a656310",
+      "target_node_id": "2a95722a-2cf5-45cf-98b3-bdf0daa567c4",
+      "source_handle": "output",
+      "target_handle": "input"
+    },
+    {
+      "source_node_id": "2a95722a-2cf5-45cf-98b3-bdf0daa567c4",
+      "target_node_id": "6f106cd6-dc15-4c7a-bb64-093ddccb39ad",
+      "source_handle": "output",
+      "target_handle": "input"
+    },
+    {
+      "source_node_id": "6f106cd6-dc15-4c7a-bb64-093ddccb39ad",
+      "target_node_id": "69003bc3-fa61-4209-95ad-1f8f37876282",
+      "source_handle": "output",
+      "target_handle": "input"
+    },
+    {
+      "source_node_id": "69003bc3-fa61-4209-95ad-1f8f37876282",
+      "target_node_id": "a18ab650-d45d-4262-9851-f5492ca67a2a",
+      "source_handle": "output",
+      "target_handle": "input"
+    }
+  ],
+  "groups": []
+}

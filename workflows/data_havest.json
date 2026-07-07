@@ -1,0 +1,643 @@
+{
+  "nodes": [
+    {
+      "node_id": "node_search_agent",
+      "type": "ai_agent",
+      "name": "Search Agent",
+      "description": "",
+      "parameters": {
+        "prompt": "WORKFLOW_VERSION: {{node_search_brief.workflow_version}}\n\nDu bist ein Lead-Discovery-Agent für Dee Empire. Diese Workflow-Datei ist ein TEMPLATE: Die Kampagne kommt nur aus dem editierbaren Prompt-Node.\n\nCAMPAIGN PROMPT / AUFGABE:\n{{node_search_brief.campaign_prompt}}\n\nNUTZE GOOGLE_SEARCH:\n{{node_search_brief.searches_text}}\n\nBEREITS IN DER DATENBANK / UNBEDINGT AUSSCHLIESSEN:\n{{node_search_brief.excluded_domains_text}}\n\nREGELN:\n- Wenn CAMPAIGN PROMPT leer ist, gib exakt {\"leads\":[]} zurück.\n- Erstelle aus dem CAMPAIGN PROMPT konkrete Google-Suchen: Ort(e), Branche(n), Zieltyp, Ausschlüsse, gewünschte Signale.\n- Gib KEINE URL zurück, deren Domain in der Ausschlussliste steht.\n- Gib KEINE großen Plattformen/Marktplätze/Verzeichnisse zurück, außer der Prompt verlangt ausdrücklich Verzeichnisquellen.\n- Bevorzuge echte Firmenwebsites, Kontaktseiten, Impressum, Telefon, Öffnungszeiten, Termin- oder Angebotsseiten.\n- Wenn ein Suchergebnis Portal/Verzeichnis ist, suche tiefer und wähle echte Unternehmen.\n- Sammle maximal {{node_search_brief.max_leads_per_run}} eindeutige Leads.\n- lead_type soll kurz und stabil sein, aus dem Prompt abgeleitet, z.B. \"arztpraxis\", \"handwerk\", \"restaurant\", \"local\", \"salon\".\n\nOUTPUT — NUR VALIDES JSON — KEIN MARKDOWN — kein Text davor/danach:\n{\"leads\":[\n  {\"url\":\"https://firma.de/kontakt\",\"company_name\":\"Firma Name\",\"lead_type\":\"local\",\"city\":\"Stadt\",\"phone\":\"N/A\",\"website_status\":\"website_found\",\"appointment_status\":\"unknown\",\"reason\":\"warum dieser Lead passt\"}\n]}",
+        "max_iterations": 10
+      },
+      "position": {
+        "x": 600,
+        "y": 550
+      },
+      "is_disabled": false
+    },
+    {
+      "node_id": "node_lm_search",
+      "type": "lm_gemini",
+      "name": "Gemini 2.5 Flash",
+      "description": "",
+      "parameters": {
+        "model": "gemini-2.5-flash"
+      },
+      "position": {
+        "x": 400,
+        "y": 450
+      },
+      "is_disabled": false
+    },
+    {
+      "node_id": "node_web_search",
+      "type": "tool_web_search",
+      "name": "Google Search",
+      "description": "",
+      "parameters": {
+        "name": "google_search",
+        "max_results": 10
+      },
+      "position": {
+        "x": 400,
+        "y": 650
+      },
+      "is_disabled": false
+    },
+    {
+      "node_id": "node_loop",
+      "type": "loop",
+      "name": "Loop Leads",
+      "description": "",
+      "parameters": {
+        "max_items": 1000,
+        "batch_size": 1,
+        "items_field": "items"
+      },
+      "position": {
+        "x": 1000,
+        "y": 350
+      },
+      "is_disabled": false
+    },
+    {
+      "node_id": "node_loop_done",
+      "type": "set",
+      "name": "Run Summary",
+      "description": "",
+      "parameters": {
+        "fields": [
+          {
+            "name": "status",
+            "value": "Pipeline complete"
+          },
+          {
+            "name": "leads_found",
+            "value": "{{node_extract_leads.total_found}}"
+          },
+          {
+            "name": "leads_new",
+            "value": "{{node_extract_leads.total_new}}"
+          },
+          {
+            "name": "leads_skipped_existing",
+            "value": "{{node_extract_leads.total_skipped}}"
+          }
+        ]
+      },
+      "position": {
+        "x": 1200,
+        "y": 200
+      },
+      "is_disabled": false
+    },
+    {
+      "node_id": "node_analyze_agent",
+      "type": "ai_agent",
+      "name": "Analyze Agent",
+      "description": "",
+      "parameters": {
+        "prompt": "Du bist ein Daten-Extraktor für Dee Empire. Nutze ZWINGEND das Tool fetch_website, um den Inhalt dieser URL zu lesen: {{node_loop.item.url}}.\nExtrahiere aus dem Seiteninhalt ein reines JSON-Objekt (kein Markdown, keine Backticks, nur JSON):\n{\"company_name\": \"...\", \"website_url\": \"...\", \"phone\": \"...\", \"email\": \"...\", \"icebreaker\": \"...\"}\n- website_url: die echte URL (nutze {{node_loop.item.url}} falls unklar).\n- phone/email: echte Kontaktdaten von der Seite; wenn nicht auffindbar, 'N/A'.\n- icebreaker: EIN kurzer, persönlicher deutscher Eröffnungssatz (max. 25 Wörter), der sich konkret auf etwas von der Website bezieht.\nWenn die Seite nicht geladen werden kann, gib trotzdem das JSON mit 'N/A' für unbekannte Felder zurück. Gib NUR das JSON aus, sonst nichts.",
+        "max_iterations": 3
+      },
+      "position": {
+        "x": 1800,
+        "y": 350
+      },
+      "is_disabled": false
+    },
+    {
+      "node_id": "node_lm_analyze",
+      "type": "lm_gemini",
+      "name": "Gemini 2.5 Pro",
+      "description": "",
+      "parameters": {
+        "model": "gemini-2.5-pro"
+      },
+      "position": {
+        "x": 1600,
+        "y": 200
+      },
+      "is_disabled": false
+    },
+    {
+      "node_id": "node_fetch_tool",
+      "type": "tool_web_fetch",
+      "name": "Fetch Website",
+      "description": "",
+      "parameters": {
+        "name": "fetch_website",
+        "max_chars": 15000
+      },
+      "position": {
+        "x": 1600,
+        "y": 500
+      },
+      "is_disabled": false
+    },
+    {
+      "node_id": "node_db_insert",
+      "type": "database",
+      "name": "Insert Lead",
+      "description": "",
+      "parameters": {
+        "query": "INSERT INTO leads (company_name, website_url, phone, email, notes, status, created_at, updated_at) VALUES ('{{node_parse_json.output.company_name}}', NULLIF(NULLIF('{{node_parse_json.output.website_url}}','N/A'),''), NULLIF(NULLIF('{{node_parse_json.output.phone}}','N/A'),''), NULLIF(NULLIF('{{node_parse_json.output.email}}','N/A'),''), NULLIF(NULLIF('{{node_parse_json.output.icebreaker}}','N/A'),''), 'new', NOW(), NOW()) ON CONFLICT (website_url) DO NOTHING",
+        "parameters": []
+      },
+      "position": {
+        "x": 2100,
+        "y": 350
+      },
+      "is_disabled": false
+    },
+    {
+      "node_id": "note_overview",
+      "type": "note",
+      "name": "Master Overview",
+      "description": "",
+      "parameters": {
+        "noteText": "DATA SCRAPING TEMPLATE - OPERATOR OVERVIEW\n\nPurpose: find real local businesses from the editable campaign prompt, extract usable lead data, insert new leads into the leads table, and email an internal run report.\n\nThis template is meant to be reused by changing only EDIT CAMPAIGN PROMPT -> campaign_prompt, max_searches_per_run, and max_leads_per_run. Do not change the graph, database queries, loop settings, extraction scripts, or email report unless you are intentionally changing workflow mechanics.\n\nSafe operating rule: the campaign prompt controls what to search for. The workflow mechanics control how leads are parsed, deduplicated, analyzed, inserted, and reported. Keep those responsibilities separate.\n\nFinal normal output: Run Summary -> Fetch Leads Collected This Run -> Build Email Report -> Email Lead Report."
+      },
+      "position": {
+        "x": -300,
+        "y": -640
+      },
+      "is_disabled": false
+    },
+    {
+      "node_id": "note_phase1",
+      "type": "note",
+      "name": "Phase 1 Note",
+      "description": "",
+      "parameters": {
+        "noteText": "PHASE 1 - EDITABLE CAMPAIGN PROMPT AND SEARCH BRIEF\n\nNodes in this phase:\n1. Trigger: Webhook\n2. EDIT CAMPAIGN PROMPT\n3. Build Prompt Search Brief\n4. Gemini 2.5 Flash\n5. Google Search\n6. Search Agent\n\nWhat happens:\n- Webhook starts the run.\n- EDIT CAMPAIGN PROMPT provides the campaign instructions.\n- Build Prompt Search Brief reads campaign_prompt, max_searches_per_run, and max_leads_per_run.\n- It also loads recent existing lead domains from the database so the Search Agent can avoid them.\n- Search Agent creates/searches Google queries from the campaign prompt and returns lead candidates as JSON.\n\nWhat the user should edit:\n- campaign_prompt: towns, business types, lead signals, exclusions, target result count.\n- max_searches_per_run: search query limit.\n- max_leads_per_run: how many leads to queue.\n\nDebug when broken:\n- If no leads are found, inspect campaign_prompt first.\n- If results are wrong, tighten towns, business types, and exclusions.\n- If old leads repeat, inspect excluded_domains_text from Build Prompt Search Brief.\n- If the prompt is empty, Search Agent should return {\"leads\":[]}."
+      },
+      "position": {
+        "x": 300,
+        "y": -440
+      },
+      "is_disabled": false
+    },
+    {
+      "node_id": "note_phase2",
+      "type": "note",
+      "name": "Phase 2 Note",
+      "description": "",
+      "parameters": {
+        "noteText": "PHASE 2 - EXTRACT LEADS, LOOP, AND DEDUP GATE\n\nNodes in this phase:\n1. Extract Leads\n2. Loop Leads\n3. Check DB for Lead\n4. Lead Exists?\n5. Log: Skipped Existing Lead\n6. Run Summary\n\nWhat happens:\n- Extract Leads normalizes Search Agent output into an items array for the loop.\n- It filters blocked domains and bad lead text, removes duplicate URLs, and does a batch duplicate check by website_url, phone, and company_name.\n- Loop Leads processes one candidate at a time.\n- Check DB for Lead is currently a pass-through query that returns no existing row. Duplicate handling is mainly done inside Extract Leads and final insert protection.\n- Lead Exists? routes false to Analyze Agent and true to skip log. In this template the condition is intentionally False so queued items continue to analysis.\n- Run Summary fires when the loop completes.\n\nImportant behavior:\n- This template targets businesses with real URLs/contact pages. If the campaign is for businesses with no website, the search prompt must still provide a source URL that can be analyzed.\n- Existing leads should be reduced before the loop by Extract Leads.\n- Insert Lead still uses ON CONFLICT as the final database safety net.\n\nDebug when broken:\n- If everything is skipped, inspect Extract Leads total_new and duplicate_status.\n- If the loop receives no items, inspect Search Agent output and Extract Leads output.\n- If Lead Exists? blocks unexpectedly, inspect its condition and incoming DB output.\n- If candidates are junk, update BLOCKED_DOMAINS/BAD_LEAD_RE only if the problem is repeatable."
+      },
+      "position": {
+        "x": 980,
+        "y": -720
+      },
+      "is_disabled": false
+    },
+    {
+      "node_id": "note_phase3",
+      "type": "note",
+      "name": "Phase 3 Note",
+      "description": "",
+      "parameters": {
+        "noteText": "PHASE 3 - ANALYZE WEBSITE, PARSE CONTACT DATA, INSERT LEAD\n\nNodes in this phase:\n1. Gemini 2.5 Pro\n2. Fetch Website\n3. Analyze Agent\n4. Parse Agent JSON\n5. Insert Lead\n6. End Iteration\n\nWhat happens:\n- Analyze Agent receives the current loop item URL.\n- It must use Fetch Website to read the page.\n- It extracts company_name, website_url, phone, email, and icebreaker as JSON.\n- Parse Agent JSON cleans the AI output and escapes values for SQL.\n- Insert Lead writes into leads with status new.\n- ON CONFLICT (website_url) DO NOTHING prevents duplicate website inserts.\n- End Iteration merges inserted and skipped paths so the loop can continue cleanly.\n\nWhat must be true:\n- node_loop.item.url should be a usable URL.\n- Analyze Agent must return JSON only, no markdown.\n- leads table must support the inserted fields.\n\nDebug when broken:\n- If inserted rows have Unknown/N/A, inspect Analyze Agent output and fetched website content.\n- If SQL fails, inspect Parse Agent JSON escaping and Insert Lead query.\n- If no row is inserted but no error occurs, ON CONFLICT probably found an existing website_url.\n- If Fetch Website fails, Analyze Agent should still return JSON with N/A for unknown fields."
+      },
+      "position": {
+        "x": 2060,
+        "y": -540
+      },
+      "is_disabled": false
+    },
+    {
+      "node_id": "node_webhook_trigger",
+      "type": "trigger_webhook",
+      "name": "Trigger: Webhook (07:00 AM)",
+      "description": "",
+      "parameters": {
+        "events": [
+          "trigger"
+        ],
+        "webhook_id": "gather_leads_hook"
+      },
+      "position": {
+        "x": 0,
+        "y": 350
+      },
+      "is_disabled": false
+    },
+    {
+      "node_id": "node_campaign_prompt",
+      "type": "set",
+      "name": "EDIT CAMPAIGN PROMPT",
+      "description": "Template control node. Edit only campaign_prompt to change town, niche, search target, exclusions, and desired lead type.",
+      "parameters": {
+        "fields": [
+          {
+            "name": "campaign_prompt",
+            "value": "Goal:\nFind local car service businesses, mechanics, and auto repair companies that may need a better website, online appointment booking system, customer inquiry form, service request workflow, or automated customer support from Dee Empire.\n\nTarget locations:\n- Lichtenfels\n- Coburg\n- Kronach\n- Kulmbach\n- Bamberg\n- Bayreuth\n- Altenkunstadt\n- Burgkunstadt\n- Bad Staffelstein\n- Nearby Oberfranken towns only if the exact towns have too few results\n\nBusiness types:\n- KFZ Werkstatt\n- Autowerkstatt\n- Car repair shop\n- Auto service center\n- Reifenservice / tire service\n- Auto detailing\n- Car wash / Autowäsche\n- Fahrzeugaufbereitung\n- TÜV service providers\n- Car body repair / Karosseriebau\n- Paint repair / Lackiererei\n- Used car dealers with repair service\n- Motorcycle repair shops\n- Truck repair services\n- Mobile mechanics\n\nGood lead signals:\n- No visible online appointment booking\n- Website looks old, simple, slow, or not mobile-friendly\n- Contact is mainly phone, email, or a basic contact form\n- Services are listed but customers cannot request a service online\n- No clear pricing, service packages, or booking process\n- No chatbot or automated customer support visible\n- No online form for repair requests, inspection requests, tire change, or TÜV appointment\n- Website is only one page or missing clear service pages\n- Business appears active but has weak digital presence\n- Local independent business, not a big franchise or national chain\n- Good fit for appointment booking, customer reminders, CRM follow-up, and website modernization\n\nExclude:\n- Google Maps\n- Facebook\n- Instagram\n- LinkedIn\n- TikTok\n- YouTube\n- Mobile.de\n- AutoScout24\n- eBay Kleinanzeigen\n- Kleinanzeigen\n- Werkstatt portals\n- Tire booking platforms\n- Check24\n- Trustpilot\n- Gelbe Seiten\n- Das Örtliche\n- Yelp\n- Meinestadt\n- Directories\n- Marketplaces\n- Newspaper articles\n- Government pages\n- Chamber of commerce pages\n- Franchise chains\n- Large national chains\n\nReturn:\nReal businesses only. Prefer official company websites, contact pages, service pages, booking pages, or inquiry forms. Collect up to 25 unique leads."
+          },
+          {
+            "name": "max_searches_per_run",
+            "value": "6"
+          },
+          {
+            "name": "max_leads_per_run",
+            "value": "18"
+          }
+        ]
+      },
+      "position": {
+        "x": 260,
+        "y": 300
+      },
+      "is_disabled": false
+    },
+    {
+      "node_id": "node_search_brief",
+      "type": "script",
+      "name": "Build Prompt Search Brief",
+      "description": "Reads the editable campaign prompt and prepares exclusion/domain context for the search agent.",
+      "parameters": {
+        "script": "module.exports = async function({ input, services }) {\n  const rawMaxSearches = Number(input && input.max_searches_per_run);\n  const rawMaxLeads = Number(input && input.max_leads_per_run);\n  const MAX_SEARCHES_PER_RUN = Number.isFinite(rawMaxSearches) && rawMaxSearches > 0 ? Math.min(rawMaxSearches, 20) : 6;\n  const MAX_LEADS_PER_RUN = Number.isFinite(rawMaxLeads) && rawMaxLeads > 0 ? Math.min(rawMaxLeads, 100) : 18;\n  const WORKFLOW_VERSION = 'data_scraping_prompt_template_v1';\n  const campaignPrompt = String((input && input.campaign_prompt) || '').trim();\n\n  const normalizeDomain = (url) => {\n    try { return new URL(String(url)).hostname.replace(/^www\\./, '').toLowerCase(); }\n    catch (e) { return null; }\n  };\n\n  const existing = await services.db({\n    query: 'SELECT website_url FROM leads WHERE website_url IS NOT NULL ORDER BY created_at DESC LIMIT 1000',\n    parameters: [],\n    limit: 1000\n  });\n  if (existing.status !== 'completed') throw new Error(existing.error || 'Could not load existing lead domains');\n\n  const excludedDomains = [...new Set((existing.rows || []).map(r => normalizeDomain(r.website_url)).filter(Boolean))];\n  const runStartedAt = new Date().toISOString();\n\n  return {\n    workflow_version: WORKFLOW_VERSION,\n    campaign_prompt: campaignPrompt,\n    campaign_focus: campaignPrompt || 'EMPTY TEMPLATE PROMPT - edit node_campaign_prompt.campaign_prompt before running.',\n    searches_text: campaignPrompt\n      ? `Create up to ${MAX_SEARCHES_PER_RUN} google_search queries from this campaign prompt:\\n${campaignPrompt}`\n      : 'NO CAMPAIGN PROMPT PROVIDED. Do not invent a campaign; return {\"leads\":[]}.',\n    excluded_domains: excludedDomains.slice(0, 300),\n    excluded_domains_text: excludedDomains.slice(0, 300).join(', '),\n    existing_domain_count: excludedDomains.length,\n    run_started_at: runStartedAt,\n    max_searches_per_run: MAX_SEARCHES_PER_RUN,\n    max_leads_per_run: MAX_LEADS_PER_RUN\n  };\n};",
+        "timeout": 60000,
+        "language": "javascript"
+      },
+      "position": {
+        "x": 250,
+        "y": 350
+      },
+      "is_disabled": false
+    },
+    {
+      "node_id": "node_parse_json",
+      "type": "script",
+      "name": "Parse Agent JSON",
+      "description": "",
+      "parameters": {
+        "script": "module.exports = async function({ input }) {\n  let parsed = {};\n  if (input && input.output && typeof input.output === 'object' && !Array.isArray(input.output)) {\n    parsed = input.output;\n  } else {\n    let raw = (input && (input.text || input.result)) || '{}';\n    if (typeof raw !== 'string') raw = JSON.stringify(raw);\n    raw = raw.replace(/```json/gi, '').replace(/```/g, '').trim();\n    try { parsed = JSON.parse(raw); } catch (e) { parsed = {}; }\n  }\n  if (!parsed || typeof parsed !== 'object') parsed = {};\n\n  const escapeSql = (str) => {\n    if (!str) return 'N/A';\n    return String(str).replace(/'/g, \"''\");\n  };\n\n  return {\n    company_name: escapeSql(parsed.company_name || 'Unknown'),\n    website_url: escapeSql(parsed.website_url),\n    phone: escapeSql(parsed.phone),\n    email: escapeSql(parsed.email),\n    icebreaker: escapeSql(parsed.icebreaker)\n  };\n};",
+        "language": "javascript"
+      },
+      "position": {
+        "x": 1950,
+        "y": 350
+      },
+      "is_disabled": false
+    },
+    {
+      "node_id": "node_extract_leads",
+      "type": "script",
+      "name": "Extract Leads",
+      "description": "",
+      "parameters": {
+        "script": "module.exports = async function({ input, services }) {\n  const MAX_LEADS_PER_RUN = 25;\n  const BLOCKED_DOMAINS = [\n    'barmer.de', 'aok.de', 'bed-ev.de', 'jameda.de', 'doctolib.de', 'treatwell.de',\n    'planity.com', 'facebook.com', 'instagram.com', 'linkedin.com', 'google.com',\n    'quelle-oder-firmenwebsite.de', 'firma-beispiel.de', 'example.com',\n    'kurier.de', 'kvb.de', 'hwk-oberfranken.de', 'deutsches-jagdportal.de', 'wittich.de',\n    'mein-amadeus.de', 'utopolis-coburg.com', 'vsbamberg.de', 'adticket.de', 'hs-coburg.de',\n    'bamberg-news.com', 'vhs-bamberg-land.de', 'ebensfeld.de'\n  ];\n  const clean = (s) => {\n    if (s === undefined || s === null) return null;\n    const v = String(s).replace(/'/g, \"''\").trim();\n    return (v === 'N/A' || v === 'None' || v === '') ? null : v;\n  };\n  const sqlEscape = (s) => String(s).replace(/'/g, \"''\");\n  const domainOf = (url) => {\n    try { return new URL(String(url)).hostname.replace(/^www\\./, '').toLowerCase(); }\n    catch (e) { return ''; }\n  };\n  const BUSINESS_RE = /(praxis|tierarzt|kleintier|zahnarzt|physio|ergo|logo|podolog|kfz|auto|werkstatt|elektr|sanitär|heizung|maler|friseur|kosmetik|fußpflege|fahrschule)/i;\n  const BAD_LEAD_RE = /(beispiel|example|zeitung|kurier|nachrichten|news|bereitschaftsdienst|verwaltung|bürgerbüro|handwerkskammer|kammer|jagdportal|pdf|wittich|programm|veranstaltung|ticket|hochschule|universität|vhs|markt |gemeinde|behörde|portal|plattform|keine spezifische|allgemeine .*suche|empfehlungsplattform|krankenhaus|klinikum|senioren|größere|kette|standortliste|keine .*praxis|keine .*firma)/i;\n  const isBlockedDomain = (url) => {\n    const domain = domainOf(url);\n    return BLOCKED_DOMAINS.some(d => domain === d || domain.endsWith('.' + d));\n  };\n  const isBadLeadText = (lead) => BAD_LEAD_RE.test(`${lead.company_name || ''} ${lead.reason || ''} ${lead.url || ''}`);\n  const parseLeadObjects = (raw) => {\n    if (typeof raw !== 'string') return [];\n    const s = raw.replace(/```json/gi, '').replace(/```/g, '').trim();\n    if (!s.includes('leads') && !s.includes('company_name')) return [];\n    try {\n      const parsed = JSON.parse(s);\n      return parsed && Array.isArray(parsed.leads) ? parsed.leads : [];\n    } catch (e) {}\n\n    // Salvage complete lead objects from truncated model output. This keeps the run useful\n    // when the agent produces valid objects but the final JSON array is cut off.\n    const leads = [];\n    const objectRe = /\\{[^{}]*\"url\"\\s*:\\s*\"[^\"]+\"[^{}]*\\}/g;\n    const matches = s.match(objectRe) || [];\n    for (const m of matches) {\n      try {\n        const obj = JSON.parse(m.replace(/,\\s*\\}/g, '}'));\n        if (obj && obj.url) leads.push(obj);\n      } catch (e) {}\n    }\n    return leads;\n  };\n  const inferLeadType = (query, title) => {\n    const text = `${query || ''} ${title || ''}`.toLowerCase();\n    if (/tierarzt|kleintier|tierklinik/.test(text)) return 'tierarzt';\n    if (/arzt|zahnarzt|physio|ergo|logo|podolog/.test(text)) return 'arztpraxis';\n    if (/kfz|auto|elektr|sanitär|heizung|maler|werkstatt/.test(text)) return 'handwerk';\n    return 'local';\n  };\n  const collectSearchResultLeads = (obj, seen = new Set()) => {\n    const leads = [];\n    if (!obj || typeof obj !== 'object' || seen.has(obj)) return leads;\n    seen.add(obj);\n    if (Array.isArray(obj)) {\n      for (const item of obj) leads.push(...collectSearchResultLeads(item, seen));\n      return leads;\n    }\n    if (obj.role === 'tool' && obj.name === 'google_search' && typeof obj.content === 'string') {\n      try {\n        const data = JSON.parse(obj.content);\n        const query = data.query || '';\n        for (const r of (data.results || [])) {\n          const url = clean(r.url);\n          const title = clean(r.title) || 'Unknown';\n          const text = `${title} ${r.snippet || ''} ${url || ''}`;\n          if (url && url.startsWith('http') && !isBlockedDomain(url) && BUSINESS_RE.test(text) && !BAD_LEAD_RE.test(text)) {\n            leads.push({\n              url,\n              company_name: title,\n              lead_type: inferLeadType(query, title),\n              phone: 'N/A',\n              city: 'N/A',\n              website_status: 'website_found',\n              appointment_status: 'unknown',\n              reason: 'from google_search fallback'\n            });\n          }\n        }\n      } catch (e) {}\n    }\n    for (const value of Object.values(obj)) leads.push(...collectSearchResultLeads(value, seen));\n    return leads;\n  };\n  const collectBodies = (obj, seen = new Set()) => {\n    const bodies = [];\n    if (!obj || typeof obj !== 'object' || seen.has(obj)) return bodies;\n    seen.add(obj);\n    if (Array.isArray(obj)) {\n      for (const item of obj) bodies.push(...collectBodies(item, seen));\n      return bodies;\n    }\n    if (Array.isArray(obj.items)) for (const it of obj.items) bodies.push((it && it.body) ? it.body : it);\n    if (Array.isArray(obj.leads)) bodies.push(obj);\n    if (obj.output && typeof obj.output === 'object') {\n      if (Array.isArray(obj.output.leads)) bodies.push(obj.output);\n      bodies.push(...collectBodies(obj.output, seen));\n    }\n    for (const key of ['result', 'text', 'content']) {\n      const leads = parseLeadObjects(obj[key]);\n      if (leads.length) bodies.push({ leads });\n    }\n    for (const value of Object.values(obj)) bodies.push(...collectBodies(value, seen));\n    return bodies;\n  };\n\n  let leads = [];\n  for (const body of collectBodies(input)) {\n    for (const r of (body.leads || [])) {\n      if (!r || typeof r !== 'object' || isBadLeadText(r)) continue;\n      const url = clean(r.url || r.website_url);\n      if (url && url.startsWith('http') && !isBlockedDomain(url)) leads.push({\n        url,\n        company_name: clean(r.company_name) || 'Unknown',\n        lead_type: clean(r.lead_type) || 'unknown',\n        phone: clean(r.phone) || 'N/A',\n        city: clean(r.city) || clean(r.town) || 'N/A',\n        website_status: clean(r.website_status) || 'unknown',\n        appointment_status: clean(r.appointment_status) || 'unknown',\n        reason: clean(r.reason) || 'N/A'\n      });\n    }\n  }\n\n  if (leads.length === 0) {\n    leads = collectSearchResultLeads(input);\n  }\n\n  const seenUrls = new Set();\n  leads = leads.filter(l => {\n    const k = l.url.toLowerCase().replace(/\\/$/, '');\n    if (seenUrls.has(k)) return false;\n    seenUrls.add(k);\n    return true;\n  });\n\n  if (leads.length === 0) return { items: [], total_found: 0, total_new: 0, total_skipped: 0, total_queued: 0, max_leads_per_run: MAX_LEADS_PER_RUN };\n\n  const urlList = leads.map(l => `'${sqlEscape(l.url)}'`).join(',');\n  const phones = leads.map(l => l.phone).filter(p => p && p !== 'N/A').map(p => `'${sqlEscape(p)}'`);\n  const names = leads.map(l => l.company_name).filter(n => n && !['N/A','None','Unknown'].includes(n)).map(n => `LOWER('${sqlEscape(n)}')`);\n  const clauses = [`website_url IN (${urlList})`];\n  if (phones.length) clauses.push(`phone IN (${phones.join(',')})`);\n  if (names.length) clauses.push(`LOWER(company_name) IN (${names.join(',')})`);\n  const existing = await services.db({\n    query: `SELECT website_url, phone, company_name FROM leads WHERE ${clauses.join(' OR ')}`,\n    parameters: [],\n    limit: 1000\n  });\n  if (existing.status !== 'completed') throw new Error(existing.error || 'Batch duplicate check failed');\n\n  const cleanUrl = (u) => String(u || '').toLowerCase().replace(/\\/$/, '');\n  const cleanName = (n) => String(n || '').trim().toLowerCase();\n  const existingUrls = new Set((existing.rows || []).map(r => cleanUrl(r.website_url)).filter(Boolean));\n  const existingPhones = new Set((existing.rows || []).map(r => clean(r.phone)).filter(Boolean));\n  const existingNames = new Set((existing.rows || []).map(r => cleanName(r.company_name)).filter(Boolean));\n  const annotated = leads.map(l => {\n    const exists = existingUrls.has(cleanUrl(l.url)) || (l.phone !== 'N/A' && existingPhones.has(l.phone)) || (l.company_name !== 'Unknown' && existingNames.has(cleanName(l.company_name)));\n    return { ...l, duplicate_status: exists ? 'existing' : 'new' };\n  });\n  const total_skipped = annotated.filter(l => l.duplicate_status === 'existing').length;\n  const total_new = annotated.length - total_skipped;\n  const queued = annotated.slice()\n    .sort((a, b) => (a.duplicate_status === 'new' ? 0 : 1) - (b.duplicate_status === 'new' ? 0 : 1))\n    .slice(0, MAX_LEADS_PER_RUN);\n  return { items: queued, total_found: annotated.length, total_new, total_skipped, total_queued: queued.length, max_leads_per_run: MAX_LEADS_PER_RUN };\n};",
+        "language": "javascript"
+      },
+      "position": {
+        "x": 900,
+        "y": 200
+      },
+      "is_disabled": false
+    },
+    {
+      "node_id": "node_db_check",
+      "type": "database",
+      "name": "Check DB for Lead",
+      "description": "",
+      "parameters": {
+        "query": "SELECT id FROM leads WHERE false LIMIT 1",
+        "parameters": []
+      },
+      "position": {
+        "x": 1200,
+        "y": 350
+      },
+      "is_disabled": false
+    },
+    {
+      "node_id": "node_conditional",
+      "type": "conditional",
+      "name": "Lead Exists?",
+      "description": "",
+      "parameters": {
+        "condition": "False"
+      },
+      "position": {
+        "x": 1400,
+        "y": 350
+      },
+      "is_disabled": false
+    },
+    {
+      "node_id": "node_skip_log",
+      "type": "set",
+      "name": "Log: Skipped Existing Lead",
+      "description": "",
+      "parameters": {
+        "fields": [
+          {
+            "name": "status",
+            "value": "skipped"
+          },
+          {
+            "name": "reason",
+            "value": "Lead already exists in database"
+          },
+          {
+            "name": "url",
+            "value": "{{node_loop.item.url}}"
+          }
+        ]
+      },
+      "position": {
+        "x": 1700,
+        "y": 600
+      },
+      "is_disabled": false
+    },
+    {
+      "node_id": "node_iter_end",
+      "type": "merge",
+      "name": "End Iteration",
+      "description": "Normal path branch merge so the report gate runs after each lead is skipped or inserted.",
+      "parameters": {
+        "mode": "chooseFirst"
+      },
+      "position": {
+        "x": 2580,
+        "y": 350
+      },
+      "is_disabled": false
+    },
+    {
+      "node_id": "node_fetch_run_leads",
+      "type": "database",
+      "name": "Fetch Leads Collected This Run",
+      "description": "Fetches leads inserted since this workflow execution started.",
+      "parameters": {
+        "query": "SELECT company_name, website_url, phone, email, status, notes, created_at FROM leads WHERE created_at >= '{{node_search_brief.run_started_at}}'::timestamptz ORDER BY created_at DESC LIMIT 300",
+        "read_only": true
+      },
+      "position": {
+        "x": 2940,
+        "y": 350
+      },
+      "is_disabled": false
+    },
+    {
+      "node_id": "node_build_email",
+      "type": "script",
+      "name": "Build Email Report",
+      "description": "Builds a Dee Empire HTML report of leads collected in this run.",
+      "parameters": {
+        "script": "module.exports = async function({ input }) {\n  const rows = (input && input.rows) || [];\n  const esc = (s)=>String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');\n  const counts = {};\n  for (const r of rows){ const s=(r.status||'new'); counts[s]=(counts[s]||0)+1; }\n  const chip = (s)=>{ const c = s==='hot'?'#16a34a':(s==='warm'?'#d4af37':(s==='new'?'#2563eb':(s==='enrichment_failed'?'#b91c1c':'#6b7280')));\n    return '<span style=\"background:'+c+';color:#fff;padding:2px 8px;border-radius:10px;font-size:11px;\">'+esc(s||'new')+'</span>'; };\n  let trs = rows.map(r=>'<tr>'\n    +'<td style=\"padding:9px 10px;border-bottom:1px solid #eee;\"><strong>'+esc(r.company_name)+'</strong><br/>'\n    +'<a href=\"'+esc(r.website_url)+'\" style=\"color:#9c7a1f;font-size:12px;\">'+esc(r.website_url)+'</a><br/>'\n    +'<span style=\"font-size:11px;color:#777;\">'+esc(r.created_at||'')+'</span></td>'\n    +'<td style=\"padding:9px 10px;border-bottom:1px solid #eee;font-size:13px;\">'+esc(r.phone||'—')+'<br/>'+esc(r.email||'—')+'</td>'\n    +'<td style=\"padding:9px 10px;border-bottom:1px solid #eee;\">'+chip(r.status||'new')+'</td>'\n    +'<td style=\"padding:9px 10px;border-bottom:1px solid #eee;font-size:12px;color:#444;\">'+esc((r.notes||'').slice(0,220))+'</td>'\n    +'</tr>').join('');\n  if(!trs) trs='<tr><td colspan=\"4\" style=\"padding:16px;color:#666;\">Keine neuen Leads in diesem Lauf — alle gefundenen Firmen waren bereits in der Datenbank oder wurden durch ON CONFLICT übersprungen.</td></tr>';\n  const summary = Object.keys(counts).map(k=>counts[k]+' '+k).join('  ·  ') || '0 neue Leads';\n  const html = '<div style=\"font-family:Arial,Helvetica,sans-serif;background:#f7f5f0;padding:24px;\">'\n   +'<table width=\"100%\" style=\"max-width:760px;margin:0 auto;background:#fff;border-radius:8px;overflow:hidden;border:1px solid #e8e1d0;\">'\n   +'<tr><td style=\"background:#0a0a0a;padding:22px 28px;\"><span style=\"color:#d4af37;font-size:20px;font-weight:bold;letter-spacing:1px;\">DEE EMPIRE</span>'\n   +'<span style=\"color:#fff;font-size:12px;float:right;margin-top:6px;\">DATA SCRAPING REPORT</span></td></tr>'\n   +'<tr><td style=\"padding:24px 28px;\"><h2 style=\"margin:0 0 6px;color:#0a0a0a;\">'+rows.length+' neue Leads in diesem Lauf</h2>'\n   +'<p style=\"margin:0 0 18px;color:#555;font-size:14px;\">'+esc(summary)+'</p>'\n   +'<table width=\"100%\" style=\"border-collapse:collapse;font-size:13px;\">'\n   +'<tr style=\"background:#fbf7ec;\"><th align=\"left\" style=\"padding:8px 10px;color:#9c7a1f;\">Unternehmen</th>'\n   +'<th align=\"left\" style=\"padding:8px 10px;color:#9c7a1f;\">Kontakt</th>'\n   +'<th align=\"left\" style=\"padding:8px 10px;color:#9c7a1f;\">Status</th>'\n   +'<th align=\"left\" style=\"padding:8px 10px;color:#9c7a1f;\">Icebreaker / Notiz</th></tr>'+trs+'</table></td></tr>'\n   +'<tr><td style=\"background:#0a0a0a;padding:16px 28px;text-align:center;\">'\n   +'<span style=\"color:#cfcfcf;font-size:11px;\">Dee Empire — automatisierter Data-Scraping-Lauf</span></td></tr></table></div>';\n  return { html, subject: 'Dee Empire Data Scraping: '+rows.length+' neue Leads gesammelt', count: rows.length };\n};",
+        "language": "javascript"
+      },
+      "position": {
+        "x": 3140,
+        "y": 350
+      },
+      "is_disabled": false
+    },
+    {
+      "node_id": "node_email_report",
+      "type": "email",
+      "name": "Email Lead Report",
+      "description": "Sends the run lead report. Requires Email Provider in Project Settings.",
+      "parameters": {
+        "to": "msesay@dee-empire.com",
+        "body": "{{node_build_email.html}}",
+        "is_html": true,
+        "subject": "{{node_build_email.subject}}",
+        "to_email": "msesay@dee-empire.com"
+      },
+      "position": {
+        "x": 3340,
+        "y": 350
+      },
+      "is_disabled": false
+    },
+    {
+      "node_id": "note_email_report",
+      "type": "note",
+      "name": "Phase 4 Note - Email Report",
+      "description": "",
+      "parameters": {
+        "noteText": "PHASE 4 - RUN SUMMARY AND EMAIL REPORT\n\nNodes in this phase:\n1. Run Summary\n2. Fetch Leads Collected This Run\n3. Build Email Report\n4. Email Lead Report\n\nWhat happens:\n- Run Summary exposes counts from Extract Leads: leads_found, leads_new, leads_skipped_existing.\n- Fetch Leads Collected This Run loads leads created since Build Prompt Search Brief recorded run_started_at.\n- Build Email Report creates a Dee Empire HTML report with lead details, contact data, status, and notes/icebreaker.\n- Email Lead Report sends the internal report to msesay@dee-empire.com.\n\nImportant behavior:\n- The email report is based on database rows inserted during this run, not just AI memory.\n- If ON CONFLICT prevents all inserts, the report may show zero new leads even if candidates were found.\n- This report fires after the loop completes, not after every single lead.\n\nDebug when broken:\n- If no email arrives, check Project Settings email provider and Email Lead Report node output.\n- If email says zero leads, inspect Insert Lead outputs and Fetch Leads Collected This Run query.\n- If counts look wrong, inspect Extract Leads totals.\n- If old leads appear in email, check run_started_at from Build Prompt Search Brief."
+      },
+      "position": {
+        "x": 2800,
+        "y": -500
+      },
+      "is_disabled": false
+    }
+  ],
+  "connections": [
+    {
+      "source_node_id": "node_lm_search",
+      "target_node_id": "node_search_agent",
+      "source_handle": "ai_languageModel",
+      "target_handle": "ai_languageModel"
+    },
+    {
+      "source_node_id": "node_web_search",
+      "target_node_id": "node_search_agent",
+      "source_handle": "ai_tool",
+      "target_handle": "ai_tool"
+    },
+    {
+      "source_node_id": "node_lm_analyze",
+      "target_node_id": "node_analyze_agent",
+      "source_handle": "ai_languageModel",
+      "target_handle": "ai_languageModel"
+    },
+    {
+      "source_node_id": "node_fetch_tool",
+      "target_node_id": "node_analyze_agent",
+      "source_handle": "ai_tool",
+      "target_handle": "ai_tool"
+    },
+    {
+      "source_node_id": "node_search_agent",
+      "target_node_id": "node_extract_leads",
+      "source_handle": "output",
+      "target_handle": "input"
+    },
+    {
+      "source_node_id": "node_analyze_agent",
+      "target_node_id": "node_parse_json",
+      "source_handle": "output",
+      "target_handle": "input"
+    },
+    {
+      "source_node_id": "node_parse_json",
+      "target_node_id": "node_db_insert",
+      "source_handle": "output",
+      "target_handle": "input"
+    },
+    {
+      "source_node_id": "node_loop",
+      "target_node_id": "node_loop_done",
+      "source_handle": "output",
+      "target_handle": "input"
+    },
+    {
+      "source_node_id": "node_loop",
+      "target_node_id": "node_db_check",
+      "source_handle": "output",
+      "target_handle": "input"
+    },
+    {
+      "source_node_id": "node_db_check",
+      "target_node_id": "node_conditional",
+      "source_handle": "output",
+      "target_handle": "input"
+    },
+    {
+      "source_node_id": "node_conditional",
+      "target_node_id": "node_skip_log",
+      "source_handle": "on_true",
+      "target_handle": "input"
+    },
+    {
+      "source_node_id": "node_conditional",
+      "target_node_id": "node_analyze_agent",
+      "source_handle": "on_false",
+      "target_handle": "input"
+    },
+    {
+      "source_node_id": "node_search_brief",
+      "target_node_id": "node_search_agent",
+      "source_handle": "output",
+      "target_handle": "input"
+    },
+    {
+      "source_node_id": "node_skip_log",
+      "target_node_id": "node_iter_end",
+      "source_handle": "output",
+      "target_handle": "input"
+    },
+    {
+      "source_node_id": "node_db_insert",
+      "target_node_id": "node_iter_end",
+      "source_handle": "output",
+      "target_handle": "input"
+    },
+    {
+      "source_node_id": "node_fetch_run_leads",
+      "target_node_id": "node_build_email",
+      "source_handle": "output",
+      "target_handle": "input"
+    },
+    {
+      "source_node_id": "node_build_email",
+      "target_node_id": "node_email_report",
+      "source_handle": "output",
+      "target_handle": "input"
+    },
+    {
+      "source_node_id": "node_extract_leads",
+      "target_node_id": "node_loop",
+      "source_handle": "output",
+      "target_handle": "input"
+    },
+    {
+      "source_node_id": "node_loop_done",
+      "target_node_id": "node_fetch_run_leads",
+      "source_handle": "output",
+      "target_handle": "input"
+    },
+    {
+      "source_node_id": "node_webhook_trigger",
+      "target_node_id": "node_campaign_prompt",
+      "source_handle": "output",
+      "target_handle": "input"
+    },
+    {
+      "source_node_id": "node_campaign_prompt",
+      "target_node_id": "node_search_brief",
+      "source_handle": "output",
+      "target_handle": "input"
+    }
+  ],
+  "groups": [
+    {
+      "name": "Phase 1 - Multi-Source Sourcing",
+      "description": "",
+      "color": "#3b82f6",
+      "position": {
+        "x": 150,
+        "y": 100
+      },
+      "size": {
+        "width": 750,
+        "height": 700
+      },
+      "node_ids": [
+        "node_search_agent",
+        "node_lm_search",
+        "node_web_search",
+        "node_campaign_prompt",
+        "node_search_brief",
+        "node_extract_leads"
+      ]
+    },
+    {
+      "name": "Phase 2 - Database Quality Gate",
+      "description": "",
+      "color": "#eab308",
+      "position": {
+        "x": 950,
+        "y": 250
+      },
+      "size": {
+        "width": 800,
+        "height": 550
+      },
+      "node_ids": [
+        "node_loop",
+        "node_fetch_tool",
+        "node_db_check",
+        "node_conditional",
+        "node_skip_log"
+      ]
+    },
+    {
+      "name": "Phase 3 - Deep Analysis & Insertion",
+      "description": "",
+      "color": "#a855f7",
+      "position": {
+        "x": 1550,
+        "y": 100
+      },
+      "size": {
+        "width": 750,
+        "height": 600
+      },
+      "node_ids": [
+        "node_analyze_agent",
+        "node_lm_analyze",
+        "node_fetch_tool",
+        "node_db_insert",
+        "node_parse_json",
+        "node_skip_log"
+      ]
+    },
+    {
+      "name": "Group 4",
+      "description": "",
+      "color": "#ef4444",
+      "position": {
+        "x": 2480,
+        "y": 100
+      },
+      "size": {
+        "width": 1140,
+        "height": 740
+      },
+      "node_ids": [
+        "node_iter_end",
+        "node_fetch_run_leads",
+        "node_build_email",
+        "node_email_report"
+      ]
+    }
+  ]
+}
